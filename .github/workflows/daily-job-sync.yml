@@ -1,25 +1,25 @@
-﻿name: Daily Assam Job Auto-Detector
+﻿name: Assam Job Auto-Detector (Every 48 Hours)
 
 on:
+  workflow_dispatch:
   schedule:
-    # Runs daily at 00:00 UTC (05:30 AM IST)
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+    # Runs every 48 hours (every 2 days) at 00:00 UTC (05:30 AM IST)
+    - cron: '0 0 */2 * *'
 
 jobs:
   sync-jobs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
 
-      - name: Install Dependencies
-        run: npm ci || npm install
+      - name: Install Scraper Packages
+        run: npm install @supabase/supabase-js
 
       - name: Run Job Scraper
         env:
