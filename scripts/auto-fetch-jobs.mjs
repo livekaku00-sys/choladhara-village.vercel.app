@@ -1,4 +1,4 @@
-﻿// 1. Allow connection to NIC / Government self-signed SSL certificates
+﻿// 1. Allow connection to NIC / Government SSL certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 import fs from 'fs';
@@ -31,8 +31,14 @@ if (!envUrl || !envKey) {
 
 const supabase = createClient(envUrl, envKey);
 
-// Strictly Verified Official Government & PSU Endpoints
+// Strictly Verified Official Government & PSU Endpoints (Including ADRE / SLRC)
 const OFFICIAL_GOVT_PORTALS = [
+  {
+    org: 'SLRC / ADRE (Assam Direct Recruitment - Class III & IV)',
+    tag: 'Assam State',
+    url: 'https://site.sebaonline.org/',
+    linkPrefix: 'https://site.sebaonline.org/'
+  },
   {
     org: 'APSC (Assam Public Service Commission)',
     tag: 'Assam State',
@@ -72,10 +78,22 @@ const OFFICIAL_GOVT_PORTALS = [
 ];
 
 async function syncGovtPortals() {
-  console.log('🏛️ Scanning Official Government Notice Boards...\n');
-  let totalInserted = 0;
+  console.log('🏛️ Running Official Govt & ADRE Job Sync Pipeline...\n');
 
-  // 1. Fetch existing titles from Supabase
+  // STEP 1: Auto-archive expired opportunities
+  const today = new Date().toISOString().split('T')[0];
+  const { data: archived, error: archiveErr } = await supabase
+    .from('opportunities')
+    .update({ is_approved: false })
+    .lt('deadline', today)
+    .eq('is_approved', true)
+    .select('id');
+
+  if (!archiveErr && archived?.length > 0) {
+    console.log(`📦 Archived ${archived.length} expired job notice(s) past deadline (${today}).\n`);
+  }
+
+  // STEP 2: Fetch existing titles
   const { data: existingJobs } = await supabase
     .from('opportunities')
     .select('title_en');
@@ -84,19 +102,19 @@ async function syncGovtPortals() {
     (existingJobs || []).map(j => (j.title_en || '').toLowerCase().trim())
   );
 
+  let totalInserted = 0;
+
+  // STEP 3: Scan verified portals
   for (const portal of OFFICIAL_GOVT_PORTALS) {
     try {
       console.log(`📡 Connecting to: ${portal.org}`);
-
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for Govt servers
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const res = await fetch(portal.url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Cache-Control': 'no-cache'
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         },
         signal: controller.signal
       });
@@ -108,8 +126,6 @@ async function syncGovtPortals() {
       }
 
       const html = await res.text();
-
-      // Extract all anchor text and links
       const anchorRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
       let match;
       let matchedCount = 0;
@@ -118,28 +134,29 @@ async function syncGovtPortals() {
         const href = match[1].trim();
         let rawText = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
-        if (!rawText || rawText.length < 12) continue;
+        if (!rawText || rawText.length < 10) continue;
 
-        // Strict recruitment relevance filter
-        const isRecruitment = /recruitment|advertisement|advt|vacancy|vacancies|post|interview|selection|walk-in|assistant|officer|grade|inspector|constable|engineer|nurse|technician|notice|notification/i.test(rawText);
+        // Recruitment relevance filter (including ADRE, SLRC, Grade III & IV)
+        const isRecruitment = /adre|slrc|grade iii|grade iv|grade-iii|grade-iv|class iii|class iv|direct recruitment|recruitment|advertisement|advt|vacancy|vacancies|post|interview|selection|walk-in|assistant|officer|inspector|constable|engineer|nurse|technician|notice|notification/i.test(rawText);
         if (!isRecruitment) continue;
 
-        // Skip generic navigational links
-        if (/click here|download|view all|archive|read more|previous|home|contact/i.test(rawText)) continue;
-
+        if (/click here|download|view all|archive|read more|previous|home|contact|feedback/i.test(rawText)) continue;
         if (existingTitles.has(rawText.toLowerCase())) continue;
 
-        // Resolve absolute URL
-        let applyUrl = href;
-        if (!href.startsWith('http')) {
-          applyUrl = `${portal.linkPrefix.replace(/\/$/, '')}/${href.replace(/^\//, '')}`;
-        }
+        let applyUrl = href.startsWith('http') ? href : `${portal.linkPrefix.replace(/\/$/, '')}/${href.replace(/^\//, '')}`;
+
+        const isCentral = portal.tag === 'Central' || portal.tag === 'Central PSU';
+        const isADRE = /adre|slrc|grade iii|grade iv|class iii|class iv/i.test(rawText) || portal.org.includes('ADRE');
 
         const newOpportunity = {
           title_en: rawText,
           title_as: rawText,
           organization: `${portal.org} • [${portal.tag}]`,
-          salary_stipend: portal.tag === 'Central' ? '7th CPC Central Pay Scale' : 'Govt of Assam Pay Band / Norms',
+          salary_stipend: isADRE 
+            ? 'Pay Band 2 / Pay Band 1 (Assam ROP Rules)' 
+            : isCentral 
+              ? '7th CPC Central Pay Scale' 
+              : 'Govt of Assam Pay Band / Norms',
           apply_url: applyUrl,
           deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           is_approved: false
@@ -158,13 +175,12 @@ async function syncGovtPortals() {
       if (matchedCount === 0) {
         console.log(`   ℹ️ Connected successfully (no new unrecorded notices).`);
       }
-
     } catch (err) {
       console.warn(`   ⚠️ ${portal.org} connection error: ${err.message}`);
     }
   }
 
-  console.log(`\n🎉 Govt Sync Complete! ${totalInserted} verified notices stored in Supabase.`);
+  console.log(`\n🎉 Govt & ADRE Sync Complete! ${totalInserted} verified notices stored.`);
 }
 
 syncGovtPortals();
