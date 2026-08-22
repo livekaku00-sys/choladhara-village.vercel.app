@@ -1,0 +1,28 @@
+﻿name: Daily Assam Job Auto-Detector
+
+on:
+  schedule:
+    # Runs daily at 00:00 UTC (05:30 AM IST)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+jobs:
+  sync-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Run Job Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/auto-fetch-jobs.mjs
