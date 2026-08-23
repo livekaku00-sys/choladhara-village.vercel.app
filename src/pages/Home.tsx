@@ -1,4 +1,5 @@
-﻿import { Opportunities } from '../components/Opportunities';
+﻿import { Scholarships } from '../components/Scholarships';
+import { Opportunities } from '../components/Opportunities';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -25,9 +26,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { WeatherSection } from '../components/WeatherSection';
 import { ClosingSoonBanner } from '../components/ClosingSoonBanner';
 import { AgricultureSection } from '../components/AgricultureSection';
-import { ScholarshipsSection } from '../components/ScholarshipsSection';
-import { ExamsSection } from '../components/ExamsSection';
-import { JobsSection } from '../components/JobsSection';
+
+
+
 import { supabase } from '../lib/supabase';
 import type { SkilledWorker, Notice } from '../types/database';
 
@@ -467,9 +468,9 @@ export const Home: React.FC = () => {
 
         <ClosingSoonBanner />
         <AgricultureSection />
-        <ScholarshipsSection />
-        <ExamsSection />
-        <JobsSection />
+        <Scholarships />
+        
+        
 
         {/* Skilled Worker Directory with Prominent Registration and Removal Request Triggers */}
         <section id="sec-skilled-workers" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm scroll-mt-20">
@@ -764,6 +765,7 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
 
 
 
