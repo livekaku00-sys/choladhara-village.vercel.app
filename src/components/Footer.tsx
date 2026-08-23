@@ -7,7 +7,7 @@ import {
   UserMinus, 
   Info, 
   CheckCircle2, 
-  Lock
+  Lock 
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -16,11 +16,11 @@ export const Footer: React.FC = () => {
   return (
     <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
       
-      {/* 1. Main Village & Contact Grid */}
+      {/* ১. মূল গ্ৰিড (Main Grid) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
-          {/* Column 1: About Portal */}
+          {/* স্তম্ভ ১ */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <span className="w-2 h-4 bg-emerald-500 rounded-full inline-block"></span>
@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 2: Emergency Contacts */}
+          {/* স্তম্ভ ২ */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Phone className="w-4 h-4 text-rose-500" />
@@ -61,7 +61,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Column 3: Help Desk */}
+          {/* স্তম্ভ ৩ */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Mail className="w-4 h-4 text-sky-400" />
@@ -72,21 +72,21 @@ export const Footer: React.FC = () => {
             </p>
             <a 
               href="mailto:choladhara.village@gmail.com" 
-              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2.5 rounded-lg break-all font-medium transition hover:border-sky-700"
+              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2 rounded-lg break-all font-medium transition hover:border-sky-700"
             >
               <Mail className="w-3.5 h-3.5 flex-shrink-0" />
               choladhara.village@gmail.com
             </a>
           </div>
 
-          {/* Column 4: Single Action Button */}
+          {/* স্তম্ভ ৪: ১টা বুটাম */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <UserMinus className="w-4 h-4 text-rose-400" />
-              প্ৰপত্ৰ (Request Form)
+              প্ৰপত্ৰ (Form)
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              প’ৰ্টেলৰ তালিকাৰ পৰা কোনো কাৰিকৰ বা ব্যক্তিৰ নাম আঁতৰাবৰ বাবে তলৰ বুটামটো ব্যৱহাৰ কৰক:
+              প’ৰ্টেলৰ তালিকাৰ পৰা কোনো কাৰিকৰ বা ব্যক্তিৰ নাম আঁতৰাবৰ বাবে অনুৰোধ জনাওক:
             </p>
             <a
               href="mailto:choladhara.village@gmail.com?subject=কাৰিকৰ%20বা%20নাম%20প্ৰত্যাহাৰৰ%20অনুৰোধ%20প্ৰপত্ৰ"
@@ -103,7 +103,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Bilingual Privacy Policy & Legal Disclaimer */}
+      {/* ২. গোপনীয়তা নীতি আৰু আইনী অস্বীকৃতি (Legal Disclaimer & Privacy) */}
       <div className="w-full bg-slate-900/80 border-t border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
           
@@ -111,7 +111,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs sm:text-sm">
               <ShieldAlert className="w-4 h-4 flex-shrink-0" />
               <span>
-                {lang === 'as' ? 'আইনী অস্বীকৃতি, গোপনীয়তা নীতি আৰু চৰ্তসমূহ' : 'Legal Disclaimer, Privacy Policy & Terms'}
+                {lang === 'as' ? 'আইনী অস্বীকৃতি, গোপনীয়তা নীতি আৰু ব্যৱহাৰৰ চৰ্তসমূহ' : 'Legal Disclaimer, Privacy Policy & Terms of Service'}
               </span>
             </div>
 
@@ -210,7 +210,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Bottom Copyright Bar */}
+      {/* ৩. কপিৰাইট বাৰ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
         <p className="text-center sm:text-left">
           © 2026 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল। | গাঁৱৰ যুৱসমাজৰ দ্বাৰা নিৰ্মিত
