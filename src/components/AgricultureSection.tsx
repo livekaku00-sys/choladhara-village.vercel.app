@@ -2,187 +2,290 @@
 import { 
   Sprout, 
   ExternalLink, 
+  PhoneCall, 
+  AlertCircle, 
+  CheckCircle2, 
   ShieldCheck, 
-  AlertTriangle, 
-  TrendingUp, 
-  Leaf, 
-  Phone
+  TrendingUp,
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
-import type { AgriFeed } from '../types/database';
+
+interface AgriService {
+  id: string;
+  category: 'paddy' | 'tea' | 'subsidy' | 'kvk';
+  title_as: string;
+  title_en: string;
+  dept_as: string;
+  dept_en: string;
+  desc_as: string;
+  desc_en: string;
+  action_label_as: string;
+  action_label_en: string;
+  link: string;
+  badge_as: string;
+  badge_en: string;
+  badge_color?: string;
+  valid_until?: string | null;
+  season?: string | null;
+  is_active?: boolean;
+}
 
 export const AgricultureSection: React.FC = () => {
   const { language } = useLanguage();
   const isAs = language === 'as';
-
-  const [items, setItems] = useState<AgriFeed[]>([]);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'scheme' | 'paddy_msp' | 'tea' | 'advisory'>('ALL');
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [services, setServices] = useState<AgriService[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchAgriFeeds = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('agriculture_feeds')
-          .select('*')
-          .eq('is_active', true)
-          .order('id', { ascending: true });
-
-        if (data && !error) {
-          setItems(data);
-        }
-      } catch (err) {
-        console.error('Error loading dynamic agriculture feeds:', err);
-      }
-    };
-
-    fetchAgriFeeds();
+    fetchAgriServices();
   }, []);
 
-  const filteredItems = activeTab === 'ALL'
-    ? items
-    : items.filter(item => item.category === activeTab);
+  const fetchAgriServices = async () => {
+    try {
+      setLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+
+      // Fetch active schemes: permanent (valid_until IS NULL) OR seasonal (valid_until >= today)
+      const { data, error } = await supabase
+        .from('agriculture_services')
+        .select('*')
+        .eq('is_active', true)
+        .or(`valid_until.is.null,valid_until.gte.${today}`)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        setServices(data as AgriService[]);
+      }
+    } catch (err) {
+      console.error('Error loading agriculture services:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRemainingDays = (validUntil: string) => {
+    const target = new Date(validUntil);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffTime = target.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const filteredServices = activeTab === 'all' 
+    ? services 
+    : services.filter(s => s.category === activeTab);
 
   return (
-    <section id="sec-agriculture" className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm scroll-mt-20">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
-        <div className="flex items-center gap-2.5">
-          <span className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
-            <Sprout className="w-5 h-5" />
-          </span>
+    <section id="sec-agriculture" className="space-y-6">
+      {/* 1. Header & Live MSP Rate */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+            <Sprout className="w-6 h-6" />
+          </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
-              {isAs ? 'কৃষি সেৱা, ধান ক্ৰয় আৰু কৃষক কল্যাণ হাব' : 'Agriculture, Paddy Procurement & Farmers Hub'}
-            </h3>
-            <p className="text-xs text-slate-500">
-              {isAs ? 'চৰকাৰী শস্য অনুদান, ধানৰ MSP, চাহ খেতিয়কৰ পৰামৰ্শ আৰু শস্য বীমা' : 'Government crop subsidies, Paddy MSP centers, Tea grower guidelines & PMFBY'}
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              {isAs ? 'কৃষি সেৱা, ধান ক্ৰয় আৰু কৃষক কল্যাণ হাব' : 'Agriculture, Paddy MSP & Farmers Hub'}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isAs ? 'চৰকাৰী শস্য অনুদান, ধানৰ MSP, চাহ খেতিয়কৰ পৰামৰ্শ আৰু শস্য বীমা' : 'Government crop subsidies, Paddy MSP centers, Tea grower guidelines & PMFBY'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] bg-emerald-50 text-emerald-800 font-bold px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5 shadow-xs">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{isAs ? 'ধানৰ MSP: ₹২,৩০০/কুইণ্টল' : 'Paddy MSP: ₹2,300/qtl'}</span>
+        <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-700/60 px-3.5 py-2 rounded-xl text-emerald-300 self-start md:self-auto shadow-sm">
+          <TrendingUp className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span className="text-xs font-bold tracking-tight">
+            {isAs ? 'ধানৰ চৰকাৰী MSP: ₹২,৩০০/কুইণ্টল' : 'Paddy Govt MSP: ₹2,300/Quintal'}
           </span>
         </div>
       </div>
 
-      <div className="mb-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5 text-slate-600">
-        <div className="flex items-center gap-1.5 font-bold text-slate-800">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>{isAs ? 'কৃষক ৰাইজৰ জ্ঞাতাৰ্থে (Farmers Advisory Notice):' : 'Official Outbound Verification Notice:'}</span>
+      {/* 2. Advisory Notice */}
+      <div className="bg-amber-950/30 border border-amber-800/40 rounded-xl p-4 text-amber-200/90 text-xs flex items-start gap-3">
+        <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <span className="font-semibold text-amber-300">
+            {isAs ? 'কৃষকৰ বাবে জৰুৰী পৰামৰ্শ (Farmers Advisory Notice): ' : 'Farmers Advisory Notice: '}
+          </span>
+          {isAs
+            ? 'সকলো চৰকাৰী অনুদান (PM-KISAN, শস্য বীমা, ট্ৰেক্টৰ ৰেহাই)ৰ বাবে নিজৰ বেংক একাউণ্টৰ সৈতে আধাৰ আৰু ভূমি পঞ্জীয়ন (Land Seeding) লিংক থকাটো বাধ্যতামূলক।'
+            : 'For all government schemes (PM-KISAN, PMFBY, SMAM), Aadhaar-seeded active bank accounts and updated land records are strictly required.'}
         </div>
-        <p className="leading-relaxed text-[11px] text-slate-600">
-          {isAs 
-            ? 'সকলো চৰকাৰী অনুদান (PM-KISAN, শস্য বীমা, ট্ৰেক্টৰ ৰাজসাহায্য) আৰু ধান বিক্ৰী কেৱল আধিকাৰিক চৰকাৰী প’ৰ্টেল আৰু জিলা কৃষি কাৰ্যালয়ৰ জৰিয়তে সম্পন্ন হয়।' 
-            : 'All DBT subsidies and paddy procurement are executed strictly via official government servers (.gov.in).'}
-        </p>
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 text-xs font-semibold">
-        {[
-          { key: 'ALL', en: 'All Services', as: 'সকলো সেৱা' },
-          { key: 'paddy_msp', en: 'Paddy MSP (₹2,300)', as: '১. ধান ক্ৰয় ও MSP' },
-          { key: 'tea', en: 'Small Tea Growers', as: '২. ক্ষুদ্ৰ চাহ খেতি' },
-          { key: 'scheme', en: 'Subsidies (PM-KISAN/PMFBY)', as: '৩. চৰকাৰী অনুদান ও বীমা' },
-          { key: 'advisory', en: 'KVK Crop Advisory', as: '৪. KVK শস্য পৰামৰ্শ' }
-        ].map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveTab(cat.key as any)}
-            className={`px-3 py-1.5 rounded-lg border whitespace-nowrap transition ${
-              activeTab === cat.key 
-                ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs' 
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            {isAs ? cat.as : cat.en}
-          </button>
-        ))}
+      {/* 3. Category Filter Tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+            activeTab === 'all'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          {isAs ? 'সকলো সেৱা' : 'All Services'}
+        </button>
+        <button
+          onClick={() => setActiveTab('paddy')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+            activeTab === 'paddy'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          {isAs ? '১. ধান ক্ৰয় & MSP' : '1. Paddy MSP'}
+        </button>
+        <button
+          onClick={() => setActiveTab('tea')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+            activeTab === 'tea'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          {isAs ? '২. ক্ষুদ্ৰ চাহ খেতি' : '2. Small Tea Growers'}
+        </button>
+        <button
+          onClick={() => setActiveTab('subsidy')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+            activeTab === 'subsidy'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          {isAs ? '৩. চৰকাৰী অনুদান & বীমা' : '3. Subsidies & Insurance'}
+        </button>
+        <button
+          onClick={() => setActiveTab('kvk')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+            activeTab === 'kvk'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          {isAs ? '৪. KVK শস্য পৰামৰ্শ' : '4. KVK Advisory'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredItems.length > 0 ? (
-          filteredItems.map(item => (
-            <div 
-              key={item.id}
-              className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 flex flex-col justify-between transition hover:shadow-md hover:bg-white hover:border-emerald-300"
-            >
-              <div>
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-200 flex items-center gap-1">
-                    {item.category === 'tea' ? <Leaf className="w-3 h-3 text-emerald-700" /> : <Sprout className="w-3 h-3 text-emerald-700" />}
-                    <span>{isAs ? item.badge_as : item.badge_en}</span>
-                  </span>
+      {/* 4. Cards Grid */}
+      {loading ? (
+        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-7 h-7 text-emerald-400 animate-spin" />
+          <p className="text-xs text-slate-400">
+            {isAs ? 'কৃষি সেৱাসমূহ লোড কৰা হৈছে...' : 'Loading agricultural services...'}
+          </p>
+        </div>
+      ) : filteredServices.length === 0 ? (
+        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 text-center text-slate-400 text-xs">
+          {isAs ? 'এই শ্ৰেণীত কোনো সক্ৰিয় আঁচনি উপলব্ধ নাই।' : 'No active schemes available under this category.'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredServices.map((service) => {
+            const daysRemaining = service.valid_until ? getRemainingDays(service.valid_until) : null;
 
-                  <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    <span>{isAs ? 'পৰীক্ষিত' : 'Verified'}</span>
-                  </span>
+            return (
+              <div
+                key={service.id}
+                className="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-5 hover:border-slate-700 transition flex flex-col justify-between shadow-sm group"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${service.badge_color || 'bg-emerald-950/80 text-emerald-300 border-emerald-800'}`}>
+                      {isAs ? service.badge_as : service.badge_en}
+                    </span>
+
+                    {daysRemaining !== null ? (
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 border ${
+                        daysRemaining <= 7 
+                          ? 'bg-rose-950/80 text-rose-300 border-rose-800 animate-pulse' 
+                          : 'bg-amber-950/60 text-amber-300 border-amber-800'
+                      }`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{daysRemaining} {isAs ? 'দিন বাকী' : 'days left'}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {isAs ? 'সক্ৰিয় সেৱা' : 'Active Scheme'}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors leading-snug">
+                    {isAs ? service.title_as : service.title_en}
+                  </h3>
+
+                  <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                    <span>{isAs ? service.dept_as : service.dept_en}</span>
+                  </p>
+
+                  <p className="text-xs text-slate-300 mt-3 leading-relaxed">
+                    {isAs ? service.desc_as : service.desc_en}
+                  </p>
                 </div>
 
-                <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-                  {isAs ? item.title_as : item.title_en}
-                </h4>
+                <div className="mt-5 pt-4 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  {service.valid_until ? (
+                    <span className="text-[10px] text-slate-400">
+                      {isAs ? 'সময়সীমা: ' : 'Valid until: '}
+                      <span className="font-semibold text-slate-300">{service.valid_until}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500">
+                      {isAs ? 'নিয়মীয়া সেৱা' : 'Year-Round Service'}
+                    </span>
+                  )}
 
-                <p className="text-[11px] text-emerald-800 font-semibold mt-1">
-                  🏛️ {isAs ? item.authority_as : item.authority_en}
-                </p>
-
-                <p className="text-xs text-slate-600 mt-2.5 leading-relaxed bg-white/80 p-3 rounded-xl border border-slate-200/60">
-                  {isAs ? item.benefit_as : item.benefit_en}
-                </p>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 font-medium">
-                  {isAs ? 'সক্ৰিয় চৰকাৰী আঁচনি' : 'Active Scheme'}
-                </span>
-
-                {item.action_link && (
-                  <a 
-                    href={item.action_link}
+                  <a
+                    href={service.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white border border-slate-700 hover:border-emerald-500 text-xs font-semibold transition active:scale-95 shadow-sm"
                   >
-                    <span>{isAs ? (item.action_label_as || 'প’ৰ্টেললৈ যাওক') : (item.action_label_en || 'Visit Portal')}</span>
+                    <span>{isAs ? service.action_label_as : service.action_label_en}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
-                )}
+                </div>
               </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-2 p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 text-xs">
-            {isAs ? 'কোনো কৃষি তথ্য পোৱা নগ’ল।' : 'No agriculture records found.'}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      <div className="mt-5 p-4 bg-gradient-to-r from-emerald-950 to-teal-950 text-white rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5">
-          <span className="p-2 bg-emerald-800 text-emerald-200 rounded-xl">
-            <Phone className="w-4 h-4" />
-          </span>
+      {/* 5. Kisan Call Centre Helpline Banner */}
+      <div className="bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-800/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-500/20 rounded-xl text-emerald-400">
+            <PhoneCall className="w-5 h-5" />
+          </div>
           <div>
-            <h5 className="font-bold text-emerald-200">
-              {isAs ? 'কিষাণ কল চেণ্টাৰ (Kisan Call Centre - বিনামূলীয়া পৰামৰ্শ):' : 'Kisan Call Centre Toll-Free Helpline:'}
-            </h5>
-            <p className="text-slate-300 text-[11px]">
-              {isAs ? 'শস্য ৰোগ, সাৰ আৰু বতৰৰ বিষয়ে কৃষি বিশেষজ্ঞৰ সৈতে পোনপটীয়া কথা পাতক' : 'Speak directly with agronomists regarding crop diseases, fertilizers & weather'}
+            <h4 className="text-sm font-bold text-white">
+              {isAs ? 'কিষাণ কল চেণ্টাৰ (Kisan Call Centre) - বিনামূলীয়া পৰামৰ্শ' : 'Kisan Call Centre - Free Helpline'}
+            </h4>
+            <p className="text-xs text-slate-400">
+              {isAs ? 'শস্য ৰোগ, সাৰ প্ৰয়োগ আৰু বতৰৰ তথ্যৰ বাবে চৰকাৰী বিনামূলীয়া নম্বৰত যোগাযোগ কৰক' : 'Dial official toll-free number for expert crop and fertilizer advice'}
             </p>
           </div>
         </div>
 
-        <a 
-          href="tel:18001801551" 
-          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5"
+        <a
+          href="tel:18001801551"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md self-start sm:self-auto"
         >
+          <PhoneCall className="w-3.5 h-3.5" />
           <span>1800-180-1551 (টোল-ফ্ৰী)</span>
         </a>
       </div>
     </section>
   );
 };
+
+export default AgricultureSection;
