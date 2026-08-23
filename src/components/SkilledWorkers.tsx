@@ -11,7 +11,8 @@ import {
   MessageSquare,
   X,
   Send,
-  Filter
+  Filter,
+  Edit3
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
@@ -32,6 +33,19 @@ export interface SkilledWorker {
   created_at?: string;
 }
 
+// 1. Predefined Regional Working Areas
+const PREDEFINED_AREAS = [
+  { key: 'Choladhara', as: 'চোলাধৰা (Choladhara)', en: 'Choladhara' },
+  { key: 'Tengapukhuri', as: 'টেঙাপুখুৰী (Tengapukhuri)', en: 'Tengapukhuri' },
+  { key: 'Nazira', as: 'নাজিৰা (Nazira)', en: 'Nazira' },
+  { key: 'Simaluguri', as: 'শিমলুগুৰি (Simaluguri)', en: 'Simaluguri' },
+  { key: 'Lakwa', as: 'লাকোৱা (Lakwa)', en: 'Lakwa' },
+  { key: 'Dholebagan', as: 'ঢোলবাগান (Dholebagan)', en: 'Dholebagan' },
+  { key: 'Charaideo', as: 'চৰাইদেউ (Charaideo)', en: 'Charaideo' },
+  { key: 'Near Charaideo', as: 'চৰাইদেউৰ সমীপৱৰ্তী (Near Charaideo)', en: 'Near Charaideo' },
+  { key: 'Near Tengapukhuri', as: 'টেঙাপুখুৰীৰ সমীপৱৰ্তী (Near Tengapukhuri)', en: 'Near Tengapukhuri' }
+];
+
 export const SkilledWorkers: React.FC = () => {
   const { language } = useLanguage();
   const isAs = language === 'as';
@@ -40,7 +54,7 @@ export const SkilledWorkers: React.FC = () => {
   const [workers, setWorkers] = useState<SkilledWorker[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Filters State
+  // Filter State
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [areaFilter, setAreaFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -53,7 +67,8 @@ export const SkilledWorkers: React.FC = () => {
   // Add Worker Form State
   const [newName, setNewName] = useState('');
   const [newTrade, setNewTrade] = useState('Electrician');
-  const [newArea, setNewArea] = useState('');
+  const [selectedAreaOption, setSelectedAreaOption] = useState(PREDEFINED_AREAS[0].key);
+  const [customArea, setCustomArea] = useState('');
   const [newPhone, setNewPhone] = useState('');
 
   // Removal Request Form State
@@ -93,14 +108,14 @@ export const SkilledWorkers: React.FC = () => {
     { key: 'Carpenter', label_as: 'কাঠমিস্ত্ৰী (Carpenter)', label_en: 'Carpenter' },
     { key: 'Mason', label_as: 'ৰাজমিস্ত্ৰী (Mason / Builder)', label_en: 'Mason' },
     { key: 'Painter', label_as: 'ৰং মিস্ত্ৰী (Painter)', label_en: 'Painter' },
-    { key: 'Welder', label_as: 'ৱেল্ডিং / ফেব্ৰিকেশ্বন (Welder / Fabrication)', label_en: 'Welder' },
-    { key: 'Mechanic', label_as: 'মেকানিক / গাড়ী মিস্ত্ৰী (Vehicle & Pump Mechanic)', label_en: 'Mechanic' },
+    { key: 'Welder', label_as: 'ৱেল্ডিং / ফেব্ৰিকেশ্বন (Welder)', label_en: 'Welder' },
+    { key: 'Mechanic', label_as: 'মেকানিক / গাড়ী মিস্ত্ৰী (Mechanic)', label_en: 'Mechanic' },
     { key: 'Electronics', label_as: 'টিভি / ফ্ৰিজ / এচি মেৰামতি (Appliance Repair)', label_en: 'Electronics & Appliance Repair' },
     { key: 'Mobile_Computer', label_as: 'মোবাইল / কম্পিউটাৰ মেৰামতি (Mobile & Computer)', label_en: 'Mobile & Computer Repair' },
     { key: 'Tailor', label_as: 'টেইলৰ / দৰ্জী (Tailor)', label_en: 'Tailor' },
-    { key: 'Driver', label_as: 'চালক / ড্ৰাইভাৰ (Driver / Operator)', label_en: 'Driver' },
+    { key: 'Driver', label_as: 'চালক / ড্ৰাইভাৰ (Driver)', label_en: 'Driver' },
     { key: 'Barber', label_as: 'চুলি কটা / নাপিত (Barber / Salon)', label_en: 'Barber' },
-    { key: 'Tent_Sound', label_as: 'পেণ্ডেল / লাইটিং / চাউণ্ড (Tent, Light & Sound)', label_en: 'Tent, Sound & Light' },
+    { key: 'Tent_Sound', label_as: 'পেণ্ডেল / লাইটিং / চাউণ্ড (Tent & Sound)', label_en: 'Tent, Sound & Light' },
     { key: 'Blacksmith', label_as: 'কমাৰ / লোহাৰ কাম (Blacksmith)', label_en: 'Blacksmith' },
     { key: 'Potter', label_as: 'কুমাৰ / মাটিৰ কাম (Potter)', label_en: 'Potter' },
     { key: 'Weaver', label_as: 'তাঁতী / শিপিনী (Weaver / Handloom)', label_en: 'Weaver' },
@@ -108,19 +123,29 @@ export const SkilledWorkers: React.FC = () => {
     { key: 'Other', label_as: 'অন্যান্য কাৰিকৰ (Other Trades)', label_en: 'Other Trades' }
   ];
 
-  // 3. Extract Dynamic Working Areas from Database Records
-  const areaOptions = useMemo(() => {
-    const areas = new Set<string>();
+  // 3. Dynamic Area Filter Options (Aggregates predefined + custom registered locations)
+  const combinedAreaOptions = useMemo(() => {
+    const areaMap = new Map<string, { as: string; en: string }>();
+
+    PREDEFINED_AREAS.forEach(p => {
+      areaMap.set(p.key.toLowerCase(), { as: p.as, en: p.en });
+    });
+
     workers.forEach((w) => {
       const area = w.area_as || w.area_en || w.village_area;
-      if (area && area.trim()) {
-        areas.add(area.trim());
+      if (area && area.trim() && !areaMap.has(area.trim().toLowerCase())) {
+        areaMap.set(area.trim().toLowerCase(), { as: area.trim(), en: area.trim() });
       }
     });
-    return Array.from(areas);
+
+    return Array.from(areaMap.entries()).map(([key, value]) => ({
+      key,
+      label_as: value.as,
+      label_en: value.en
+    }));
   }, [workers]);
 
-  // 4. Combined Search and Filter Logic
+  // 4. Combined Filter Logic
   const filteredWorkers = useMemo(() => {
     return workers.filter((worker) => {
       const q = searchQuery.toLowerCase().trim();
@@ -129,10 +154,10 @@ export const SkilledWorkers: React.FC = () => {
       const workerName = (worker.full_name || '').toLowerCase();
       const workerPhone = (worker.phone || worker.phone_number || '');
 
-      // Area Filter Match
+      // Working Area Match
       const matchesArea = areaFilter === 'ALL' || workerArea.includes(areaFilter.toLowerCase());
 
-      // Category Filter Match
+      // Category Match
       let matchesCategory = categoryFilter === 'ALL';
       if (!matchesCategory) {
         const cat = categoryFilter.toLowerCase();
@@ -143,7 +168,7 @@ export const SkilledWorkers: React.FC = () => {
           (categoryFilter === 'Catering_Cook' && (workerTrade.includes('cook') || workerTrade.includes('catering') || workerTrade.includes('ৰান্ধনী')));
       }
 
-      // Search Match
+      // Search Query Match
       const matchesSearch = !q || 
         workerName.includes(q) || 
         workerTrade.includes(q) || 
@@ -154,7 +179,7 @@ export const SkilledWorkers: React.FC = () => {
     });
   }, [workers, searchQuery, areaFilter, categoryFilter]);
 
-  // Handle Add Worker Submit
+  // Handle Add Worker Submission
   const handleAddWorkerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newPhone.trim()) {
@@ -162,17 +187,37 @@ export const SkilledWorkers: React.FC = () => {
       return;
     }
 
+    if (selectedAreaOption === 'OTHER' && !customArea.trim()) {
+      alert(isAs ? 'অনুগ্ৰহ কৰি আপোনাৰ কৰ্ম এলেকাৰ নাম উল্লেখ কৰক।' : 'Please specify your working area name.');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const selectedOption = tradeOptions.find(t => t.key === newTrade);
+      const selectedTradeOption = tradeOptions.find(t => t.key === newTrade);
+
+      // Determine final area name
+      let finalAreaAs = '';
+      let finalAreaEn = '';
+
+      if (selectedAreaOption === 'OTHER') {
+        const customValue = customArea.trim();
+        finalAreaAs = customValue;
+        finalAreaEn = customValue;
+      } else {
+        const found = PREDEFINED_AREAS.find(p => p.key === selectedAreaOption);
+        finalAreaAs = found ? found.as.split(' ')[0] : selectedAreaOption;
+        finalAreaEn = found ? found.en : selectedAreaOption;
+      }
+
       const payload = {
         full_name: newName.trim(),
         trade: newTrade,
-        skill_en: selectedOption?.label_en || newTrade,
-        skill_as: selectedOption?.label_as.split(' ')[0] || newTrade,
-        area_as: newArea.trim(),
-        area_en: newArea.trim(),
-        village_area: newArea.trim(),
+        skill_en: selectedTradeOption?.label_en || newTrade,
+        skill_as: selectedTradeOption?.label_as.split(' ')[0] || newTrade,
+        area_as: finalAreaAs,
+        area_en: finalAreaEn,
+        village_area: finalAreaEn,
         phone: newPhone.trim(),
         phone_number: newPhone.trim(),
         is_verified: false
@@ -182,13 +227,14 @@ export const SkilledWorkers: React.FC = () => {
       if (error) throw error;
 
       alert(isAs 
-        ? 'আপোনাৰ তথ্য সফলতাৰে জমা হৈছে। পৰীক্ষণৰ পিছত ইয়াত প্ৰকাশ পাব।' 
+        ? 'আপোনাৰ তথ্য সফলতাৰে জমা হৈছে। পৰীক্ষণৰ পিছত কাৰিকৰ তালিকাত প্ৰকাশ পাব।' 
         : 'Worker profile submitted successfully. It will be published after verification.');
 
       setShowAddModal(false);
       setNewName('');
-      setNewArea('');
+      setCustomArea('');
       setNewPhone('');
+      setSelectedAreaOption(PREDEFINED_AREAS[0].key);
       fetchWorkers();
     } catch (err: any) {
       console.error('Error adding worker:', err);
@@ -198,7 +244,7 @@ export const SkilledWorkers: React.FC = () => {
     }
   };
 
-  // Handle Removal Request Submit
+  // Handle Removal Request Submission
   const handleRemovalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!removalWorkerName.trim() || !removalPhone.trim()) {
@@ -219,7 +265,7 @@ export const SkilledWorkers: React.FC = () => {
 
   return (
     <section id="sec-artisans" className="space-y-6">
-      {/* 1. Header & Quick Action Buttons */}
+      {/* 1. Header & Live Action Buttons */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 flex-shrink-0 shadow-inner">
@@ -228,7 +274,7 @@ export const SkilledWorkers: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {isAs ? 'গাঁৱৰ দক্ষ কাৰিকৰ আৰু সেৱা নিৰ্দেশিকা' : 'Village Artisans & Skilled Workers Directory'}
+                {isAs ? 'দক্ষ কাৰিকৰ আৰু সেৱা নিৰ্দেশিকা' : 'Skilled Workers & Artisans Directory'}
               </h2>
               <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800">
                 {workers.length}
@@ -236,8 +282,8 @@ export const SkilledWorkers: React.FC = () => {
             </div>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
               {isAs 
-                ? 'বিদ্যুৎ মিস্ত্ৰী, কাঠমিস্ত্ৰী, প্লাম্বাৰ আৰু গাঁৱৰ সকলো দক্ষ কাৰিকৰৰ সত্যাপিক যোগাযোগ নিৰ্দেশিকা' 
-                : 'Verified contact directory of all local trade specialists, technicians, and artisans'}
+                ? 'চোলাধৰা, টেঙাপুখুৰী, নাজিৰা, শিমলুগুৰি, লাকোৱা আৰু সমীপৱৰ্তী অঞ্চলৰ সকলো কাৰিকৰৰ নিৰ্দেশিকা' 
+                : 'Verified contact directory of skilled workers across Choladhara, Tengapukhuri, Nazira, Simaluguri, Lakwa & nearby areas'}
             </p>
           </div>
         </div>
@@ -265,16 +311,16 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Search & Double Dropdowns (Trade Category & Working Area) */}
+      {/* 2. Search & Dual Dropdown Filters (Category & Working Area) */}
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-md backdrop-blur-sm grid grid-cols-1 sm:grid-cols-12 gap-3">
-        {/* Search Input */}
+        {/* Search Bar */}
         <div className="sm:col-span-6 relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isAs ? 'কাৰিকৰৰ নাম, কাম বা নম্বৰ সন্ধান কৰক...' : 'Search by name, trade, area or phone...'}
+            placeholder={isAs ? 'কাৰিকৰৰ নাম, কাম, এলেকা বা নম্বৰ সন্ধান কৰক...' : 'Search by name, trade, area or phone...'}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 shadow-inner"
           />
         </div>
@@ -305,11 +351,11 @@ export const SkilledWorkers: React.FC = () => {
             className="w-full pl-9 pr-8 py-2.5 bg-slate-950/80 border border-slate-700 text-white rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 cursor-pointer appearance-none"
           >
             <option value="ALL" className="bg-slate-900 text-white">
-              {isAs ? 'সকলো অঞ্চল / চুবুৰি (All Areas)' : 'All Village Areas'}
+              {isAs ? 'সকলো কৰ্ম এলেকা (All Working Areas)' : 'All Working Areas'}
             </option>
-            {areaOptions.map((area) => (
-              <option key={area} value={area} className="bg-slate-900 text-white">
-                {area}
+            {combinedAreaOptions.map((area) => (
+              <option key={area.key} value={area.key} className="bg-slate-900 text-white">
+                {isAs ? area.label_as : area.label_en}
               </option>
             ))}
           </select>
@@ -329,7 +375,7 @@ export const SkilledWorkers: React.FC = () => {
             {isAs ? 'এই শ্ৰেণী বা অঞ্চলত কোনো কাৰিকৰ পোৱা নগ’ল।' : 'No skilled workers found matching selected criteria.'}
           </p>
           <p className="text-xs text-slate-500">
-            {isAs ? 'অনুগ্ৰহ কৰি আন বিভাগ বা অঞ্চল বাছনি কৰক।' : 'Try selecting another trade category or area filter.'}
+            {isAs ? 'অনুগ্ৰহ কৰি আন বিভাগ বা এলেকা বাছনি কৰক।' : 'Try selecting another trade category or area filter.'}
           </p>
         </div>
       ) : (
@@ -392,8 +438,8 @@ export const SkilledWorkers: React.FC = () => {
                     <a
                       href={`https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(
                         isAs 
-                          ? `নমস্কাৰ ${worker.full_name}, চোলাধৰা গ্ৰাম্য প'ৰ্টেলৰ পৰা আপোনাৰ সেৱাৰ বিষয়ে যোগাযোগ কৰিছোঁ।` 
-                          : `Hello ${worker.full_name}, contacting you regarding your service from Choladhara Portal.`
+                          ? `নমস্কাৰ ${worker.full_name}, প'ৰ্টেলৰ পৰা আপোনাৰ সেৱাৰ বিষয়ে যোগাযোগ কৰিছোঁ।` 
+                          : `Hello ${worker.full_name}, contacting you regarding your service from the portal.`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -410,10 +456,10 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 1: ADD WORKER FORM */}
+      {/* MODAL 1: ADD WORKER WITH "OTHER" WORKING AREA INPUT */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowAddModal(false)}
               className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700 transition"
@@ -427,7 +473,7 @@ export const SkilledWorkers: React.FC = () => {
                 <span>{isAs ? 'নতুন কাৰিকৰৰ নাম পঞ্জীয়ন' : 'Register Skilled Worker'}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                {isAs ? 'গাঁৱৰ সকলো দক্ষ কাৰিকৰে নিজৰ নাম আৰু সেৱা অন্তৰ্ভুক্ত কৰিব পাৰিব।' : 'Add local artisan contact details to the village directory.'}
+                {isAs ? 'কৰ্ম স্থান আৰু বিভাগ বাছনি কৰি নিজৰ নাম অন্তৰ্ভুক্ত কৰক।' : 'Select working area and trade to register in directory.'}
               </p>
             </div>
 
@@ -463,17 +509,44 @@ export const SkilledWorkers: React.FC = () => {
                 </select>
               </div>
 
+              {/* Working Area Selection & "Other" Blank Input Box */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">
-                  {isAs ? 'গাঁও / চুবুৰিৰ নাম' : 'Village / Locality Area'}
+                  {isAs ? 'কৰ্ম স্থান / এলেকা (Working Area) *' : 'Working Place / Area *'}
                 </label>
-                <input
-                  type="text"
-                  value={newArea}
-                  onChange={(e) => setNewArea(e.target.value)}
-                  placeholder={isAs ? 'যেনে: বৰুৱা চুক' : 'e.g. Boruah Chuk'}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                />
+                <select
+                  value={selectedAreaOption}
+                  onChange={(e) => setSelectedAreaOption(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer mb-2"
+                >
+                  {PREDEFINED_AREAS.map((area) => (
+                    <option key={area.key} value={area.key}>
+                      {isAs ? area.as : area.en}
+                    </option>
+                  ))}
+                  <option value="OTHER">
+                    {isAs ? '➕ অন্যান্য স্থান (তলৰ বাকচত লিখক) / Other' : '➕ Other Area (Specify in box below)'}
+                  </option>
+                </select>
+
+                {/* Blank input box conditionally rendered when "Other" is selected */}
+                {selectedAreaOption === 'OTHER' && (
+                  <div className="space-y-1 animate-fade-in pt-1">
+                    <label className="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
+                      <Edit3 className="w-3 h-3" />
+                      <span>{isAs ? 'আপোনাৰ কৰ্ম এলেকাৰ নাম ইয়াত লিখক *' : 'Specify Your Working Area Here *'}</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      autoFocus
+                      value={customArea}
+                      onChange={(e) => setCustomArea(e.target.value)}
+                      placeholder={isAs ? 'যেনে: বৰুৱা চুক, ঐতিহাসিক পুখুৰী পাৰ...' : 'e.g. Boruah Chuk, Station Road...'}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-amber-500/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-md shadow-amber-500/10"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -514,7 +587,7 @@ export const SkilledWorkers: React.FC = () => {
 
       {/* MODAL 2: REMOVAL REQUEST FORM */}
       {showRemovalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative">
             <button
               onClick={() => setShowRemovalModal(false)}
