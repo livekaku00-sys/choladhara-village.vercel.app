@@ -128,15 +128,15 @@ export const Opportunities: React.FC = () => {
     });
   }, [activeTab, searchQuery]);
 
-  const handleShare = (item: Opportunity) => {
+  // Generates universal direct WhatsApp share URL
+  const getWhatsAppShareUrl = (item: Opportunity) => {
     const shareText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন আৰু আবেদন লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`;
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-    window.open(whatsappUrl, '_blank');
+    return `https://wa.me/?text=${encodeURIComponent(shareText)}`;
   };
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Dark container card ensures crisp contrast anywhere */}
+      {/* High-contrast container for light or dark modes */}
       <div className="bg-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl">
         
         {/* Header Block */}
@@ -237,6 +237,7 @@ export const Opportunities: React.FC = () => {
                   </p>
                 </div>
 
+                {/* Direct Action Links */}
                 <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
                   <a
                     href={item.applyUrl}
@@ -248,14 +249,15 @@ export const Opportunities: React.FC = () => {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
 
-                  <button
-                    type="button"
-                    onClick={() => handleShare(item)}
+                  <a
+                    href={getWhatsAppShareUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     title="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                    className="inline-flex items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-lg transition"
+                    className="inline-flex items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-lg transition active:scale-95 hover:border-emerald-600"
                   >
                     <Share2 className="w-4 h-4" />
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
