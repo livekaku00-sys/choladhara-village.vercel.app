@@ -26,7 +26,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'pmegp-2026',
     title: "Prime Minister's Employment Generation Programme (PMEGP)",
     category: '10th',
-    categoryBadge: '১০ম উত্তীৰ্ণ / সাধাৰণ (General & 10th+)',
+    categoryBadge: '০ম উত্তীৰ্ণ / সাধাৰণ (General & 10th+)',
     department: 'Ministry of MSME / KVIC',
     deadline: '2026-12-31',
     applyUrl: 'https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp',
@@ -96,7 +96,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'assam-bed-cet-2026',
     title: 'Assam B.Ed Common Entrance Test (GUBEDCET / DUBEDCET)',
     category: 'entrance',
-    categoryBadge: 'প্ৰৱেশ পৰীক্ষা (Entrance Exam - B.Ed)',
+    categoryBadge: 'প্ৰেশ পৰীক্ষা (Entrance Exam - B.Ed)',
     department: 'Gauhati & Dibrugarh University',
     deadline: '2026-09-30',
     applyUrl: 'https://dibru.ac.in/',
@@ -110,7 +110,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     department: 'Directorate of Technical Education (DTE Assam)',
     deadline: '2026-09-15',
     applyUrl: 'https://dte.assam.gov.in/',
-    description: 'অসমৰ ৰাজ্যিক পলিটেকনিক প্ৰতিষ্ঠানসমূহত ৩ বছৰীয়া ইঞ্জিনিয়াৰিং ডিপ্লমা পাঠ্যক্ৰমত নামভৰ্তিৰ প্ৰেশ পৰীক্ষা।'
+    description: 'অসমৰ ৰাজ্যিক পলিটেকনিক প্ৰতিষ্ঠানসমূহত ৩ বছৰীয়া ইঞ্জিনিয়াৰিং ডিপ্লমা পাঠ্যক্ৰমত নামভৰ্তিৰ প্ৰৱেশ পৰীক্ষা।'
   }
 ];
 
@@ -141,8 +141,10 @@ export const Opportunities: React.FC = () => {
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
         
+        {/* Decorative background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
 
+        {/* Header Block */}
         <div className="relative text-center space-y-4 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 text-xs font-semibold border border-emerald-800/80 shadow-lg shadow-emerald-900/20">
             <Sparkles className="w-3.5 h-3.5" />
@@ -165,6 +167,7 @@ export const Opportunities: React.FC = () => {
           </div>
         </div>
 
+        {/* Search & Category Filter Tabs */}
         <div className="relative space-y-5 mb-10">
           <div className="relative max-w-xl mx-auto group">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
@@ -201,6 +204,7 @@ export const Opportunities: React.FC = () => {
           </div>
         </div>
 
+        {/* Cards Grid */}
         {filteredData.length === 0 ? (
           <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-dashed border-slate-700 backdrop-blur-sm">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/80 mb-4 shadow-inner">
@@ -218,6 +222,7 @@ export const Opportunities: React.FC = () => {
             {filteredData.map((item) => {
               const urgent = isDeadlineUrgent(item.deadline);
               
+              // FIXED: Using wa.me for Desktop Web compatibility
               const whatsappText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
@@ -230,6 +235,7 @@ export const Opportunities: React.FC = () => {
                              hover:-translate-y-1 transition-all duration-300 ease-out 
                              flex flex-col"
                 >
+                  {/* Top accent line on hover */}
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                   <div className="p-5 space-y-3 flex-1 flex flex-col">
@@ -259,13 +265,14 @@ export const Opportunities: React.FC = () => {
                       </p>
                     </div>
 
+                    {/* Description with mt-auto to push button bar down naturally */}
                     <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 pt-3 mt-auto line-clamp-3">
                       {item.description}
                     </p>
                   </div>
 
                   {/* FIXED: WhatsApp button with brand color + MessageCircle icon + label */}
-                  <div className="p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm">
+                  <div className="relative z-10 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm">
                     <a
                       href={item.applyUrl}
                       target="_blank"
