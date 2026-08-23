@@ -7,7 +7,6 @@ import {
   UserMinus, 
   Info, 
   CheckCircle2, 
-  ExternalLink,
   Lock
 } from 'lucide-react';
 
@@ -104,7 +103,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Bilingual Privacy Policy & Legal Disclaimer Strip */}
+      {/* 2. Bilingual Privacy Policy & Legal Disclaimer */}
       <div className="w-full bg-slate-900/80 border-t border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
           

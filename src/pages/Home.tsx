@@ -847,7 +847,10 @@ export const Home: React.FC = () => {
         </div>
       )}
 
+      <Opportunities />
+
     </div>
   );
 };
+
 
