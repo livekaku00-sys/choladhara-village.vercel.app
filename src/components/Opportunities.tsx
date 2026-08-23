@@ -1,12 +1,13 @@
 ﻿import React, { useState, useMemo } from 'react';
-import {
-  Search,
-  CheckCircle2,
-  Building2,
+import { 
+  Search, 
+  CheckCircle2, 
+  Building2, 
   Clock,
   Sparkles,
   Briefcase,
-  ArrowUpRight
+  ArrowUpRight,
+  MessageCircle
 } from 'lucide-react';
 
 interface Opportunity {
@@ -120,11 +121,10 @@ export const Opportunities: React.FC = () => {
   const filteredData = useMemo(() => {
     return OPPORTUNITIES_DATA.filter(item => {
       const matchesTab = activeTab === 'all' || item.category === activeTab;
-      const matchesSearch =
+      const matchesSearch = 
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
-
       return matchesTab && matchesSearch;
     });
   }, [activeTab, searchQuery]);
@@ -134,14 +134,13 @@ export const Opportunities: React.FC = () => {
     const now = new Date();
     const diffTime = deadline.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     return diffDays <= 7 && diffDays >= 0;
   };
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
-
+        
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
 
         <div className="relative text-center space-y-4 mb-12">
@@ -149,18 +148,17 @@ export const Opportunities: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5" />
             <span>প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল</span>
           </div>
-
+          
           <h2 className="relative text-2xl sm:text-4xl font-extrabold text-white tracking-tight pb-3">
             কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ
             <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent rounded-full opacity-60"></span>
           </h2>
-
+          
           <div className="space-y-1">
             <p className="text-sm sm:text-base font-bold text-emerald-400 flex items-center justify-center gap-2">
               <Briefcase className="w-4 h-4" />
               চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
             </p>
-
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
               অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
             </p>
@@ -170,7 +168,6 @@ export const Opportunities: React.FC = () => {
         <div className="relative space-y-5 mb-10">
           <div className="relative max-w-xl mx-auto group">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
-
             <input
               type="text"
               value={searchQuery}
@@ -209,86 +206,66 @@ export const Opportunities: React.FC = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/80 mb-4 shadow-inner">
               <Search className="w-8 h-8 text-slate-500" />
             </div>
-
             <p className="text-base font-semibold text-slate-300 mb-1">
               কোনো ফলাফল পোৱা নগ’ল
             </p>
-
             <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
               আপুনি বিচৰা ধৰণৰ জাননী এতিয়া উপলব্ধ নাই। অনুগ্ৰহ কৰি আন কিৱৰ্ড বা শ্ৰেণী চেষ্টা কৰক।
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
             {filteredData.map((item) => {
               const urgent = isDeadlineUrgent(item.deadline);
-
-              const whatsappText = `📢 *${item.title}*
-🏢 বিভাগ: ${item.department}
-🎓 অৰ্হতা: ${item.categoryBadge}
-⏳ অন্তিম তাৰিখ: ${item.deadline}
-
-🔗 অফিচিয়েল লিংক:
-${item.applyUrl}
-
-🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
-
+              
+              const whatsappText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
               return (
-                <div
+                <div 
                   key={item.id}
-                  className="group relative bg-gradient-to-b from-slate-800/60 to-slate-900/80
+                  className="group relative bg-gradient-to-b from-slate-800/60 to-slate-900/80 
                              border border-slate-700/50 rounded-2xl overflow-hidden
-                             hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-900/10
-                             hover:-translate-y-1 transition-all duration-300 ease-out
+                             hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-900/10 
+                             hover:-translate-y-1 transition-all duration-300 ease-out 
                              flex flex-col"
                 >
-
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                   <div className="p-5 space-y-3 flex-1 flex flex-col">
-
                     <div className="flex items-start justify-between gap-2">
-
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 rounded-md shadow-sm">
                         <CheckCircle2 className="w-3 h-3" />
                         {item.categoryBadge}
                       </span>
-
+                      
                       <div className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded border shadow-sm whitespace-nowrap ${
-                        urgent
-                          ? 'text-red-300 bg-red-950/60 border-red-800/60 animate-pulse'
+                        urgent 
+                          ? 'text-red-300 bg-red-950/60 border-red-800/60 animate-pulse' 
                           : 'text-amber-300 bg-amber-950/60 border-amber-800/60'
                       }`}>
                         <Clock className={`w-3 h-3 ${urgent ? 'text-red-400' : 'text-amber-400'}`} />
                         <span>{item.deadline}</span>
                       </div>
-
                     </div>
 
                     <div className="mt-2">
-
                       <h3 className="text-sm sm:text-[15px] font-bold text-white leading-snug group-hover:text-emerald-100 transition-colors line-clamp-2">
                         {item.title}
                       </h3>
-
                       <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-2">
                         <Building2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                         <span className="line-clamp-1">{item.department}</span>
                       </p>
-
                     </div>
 
                     <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 pt-3 mt-auto line-clamp-3">
                       {item.description}
                     </p>
-
                   </div>
 
+                  {/* FIXED: WhatsApp button with brand color + MessageCircle icon + label */}
                   <div className="p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm">
-
                     <a
                       href={item.applyUrl}
                       target="_blank"
@@ -299,37 +276,23 @@ ${item.applyUrl}
                       <ArrowUpRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                     </a>
 
-                    {/* WhatsApp share button */}
                     <a
                       href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       title="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                      aria-label="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                      className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3
-                                 bg-[#25D366] hover:bg-[#1da851] text-white
-                                 rounded-xl text-xs font-bold shadow-md shadow-green-900/20
+                      className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 
+                                 bg-[#25D366] hover:bg-[#1da851] text-white 
+                                 rounded-xl text-xs font-bold shadow-md shadow-green-900/20 
                                  transition-all active:scale-[0.98] whitespace-nowrap"
                     >
-
-                      {/* Actual WhatsApp logo */}
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="w-4 h-4"
-                        aria-hidden="true"
-                        fill="currentColor"
-                      >
-                        <path d="M20.52 3.48A11.78 11.78 0 0 0 12.06 0C5.55 0 .25 5.3.25 11.81c0 2.08.54 4.11 1.56 5.9L.15 24l6.44-1.69a11.77 11.77 0 0 0 5.47 1.35h.01c6.51 0 11.81-5.3 11.81-11.81 0-3.15-1.23-6.11-3.36-8.37ZM12.07 21.67h-.01a9.82 9.82 0 0 1-5.01-1.37l-.36-.21-3.82 1 1.02-3.72-.23-.38a9.82 9.82 0 1 1 8.41 4.68Zm5.39-7.36c-.29-.15-1.7-.84-1.96-.93-.26-.1-.45-.15-.64.15-.19.29-.74.93-.91 1.12-.17.2-.33.22-.62.07-.29-.15-1.21-.45-2.3-1.42-.85-.76-1.43-1.69-1.6-1.98-.17-.29-.02-.45.13-.6.13-.13.29-.33.43-.49.15-.17.19-.29.29-.48.1-.2.05-.37-.02-.52-.07-.15-.64-1.55-.88-2.13-.23-.56-.47-.48-.64-.49h-.54c-.19 0-.5.07-.76.37-.26.29-1 1-.1 2.42.9 1.42 1.73 2.37 3.15 3.33.44.3.98.68 1.67 1.04.69.36 1.29.57 1.73.73.73.23 1.39.2 1.91.12.58-.09 1.7-.7 1.94-1.37.24-.68.24-1.26.17-1.38-.07-.12-.26-.19-.54-.34Z" />
-                      </svg>
-
+                      <MessageCircle className="w-4 h-4 fill-current" />
                       <span>শ্বেয়াৰ</span>
                     </a>
-
                   </div>
                 </div>
               );
             })}
-
           </div>
         )}
 
