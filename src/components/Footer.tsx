@@ -155,25 +155,31 @@ export const Footer: React.FC = () => {
 
         </div>
 
-        {/* Bottom Bar: Copyright | Non-Profit Tag | Discrete Lock Symbol ONLY */}
+        {/* Bottom Bar: Copyright | CENTERED Initiative Badge | Discrete Lock */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           
-          <p>© {new Date().getFullYear()} Choladhara Village Portal. All rights reserved.</p>
+          {/* Left: Copyright */}
+          <div className="w-full sm:w-auto text-center sm:text-left order-2 sm:order-1">
+            <p>© {new Date().getFullYear()} Choladhara Village Portal. All rights reserved.</p>
+          </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+          {/* Center: Community Initiative Badge */}
+          <div className="w-full sm:w-auto flex items-center justify-center gap-1.5 text-[11px] text-slate-400 order-1 sm:order-2 mb-2 sm:mb-0">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>Community Public Service Initiative</span>
           </div>
 
-          {/* DISCRETE LOCK SYMBOL ONLY - text-slate-700 (invisible to visitors) */}
-          <Link
-            to="/admin"
-            className="p-2 rounded-lg text-slate-700 hover:text-slate-500 transition active:scale-90"
-            title="Admin Login"
-            aria-label="Admin Login"
-          >
-            <Lock className="w-3.5 h-3.5" />
-          </Link>
+          {/* Right: Discrete Lock Symbol ONLY */}
+          <div className="w-full sm:w-auto flex justify-center sm:justify-end order-3">
+            <Link
+              to="/admin"
+              className="p-2 rounded-lg text-slate-700 hover:text-slate-500 transition active:scale-90"
+              title="Admin Login"
+              aria-label="Admin Login"
+            >
+              <Lock className="w-3.5 h-3.5" />
+            </Link>
+          </div>
 
         </div>
 
