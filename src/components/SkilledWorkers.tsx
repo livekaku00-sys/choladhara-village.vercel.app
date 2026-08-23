@@ -79,13 +79,36 @@ export const SkilledWorkers: React.FC = () => {
         setWorkers(data);
       }
     } catch (err) {
-      console.error('Error fetching skilled workers:', err);
+      console.error('Error loading skilled workers:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Extract Dynamic Area List from Database Records
+  // 2. Complete Professional Categories List
+  const tradeOptions = [
+    { key: 'ALL', label_as: 'সকলো বিভাগ (All Categories)', label_en: 'All Categories' },
+    { key: 'Electrician', label_as: 'বিদ্যুৎ মিস্ত্ৰী (Electrician)', label_en: 'Electrician' },
+    { key: 'Plumber', label_as: 'প্লাম্বাৰ / পাইপ মিস্ত্ৰী (Plumber)', label_en: 'Plumber' },
+    { key: 'Carpenter', label_as: 'কাঠমিস্ত্ৰী (Carpenter)', label_en: 'Carpenter' },
+    { key: 'Mason', label_as: 'ৰাজমিস্ত্ৰী (Mason / Builder)', label_en: 'Mason' },
+    { key: 'Painter', label_as: 'ৰং মিস্ত্ৰী (Painter)', label_en: 'Painter' },
+    { key: 'Welder', label_as: 'ৱেল্ডিং / ফেব্ৰিকেশ্বন (Welder / Fabrication)', label_en: 'Welder' },
+    { key: 'Mechanic', label_as: 'মেকানিক / গাড়ী মিস্ত্ৰী (Vehicle & Pump Mechanic)', label_en: 'Mechanic' },
+    { key: 'Electronics', label_as: 'টিভি / ফ্ৰিজ / এচি মেৰামতি (Appliance Repair)', label_en: 'Electronics & Appliance Repair' },
+    { key: 'Mobile_Computer', label_as: 'মোবাইল / কম্পিউটাৰ মেৰামতি (Mobile & Computer)', label_en: 'Mobile & Computer Repair' },
+    { key: 'Tailor', label_as: 'টেইলৰ / দৰ্জী (Tailor)', label_en: 'Tailor' },
+    { key: 'Driver', label_as: 'চালক / ড্ৰাইভাৰ (Driver / Operator)', label_en: 'Driver' },
+    { key: 'Barber', label_as: 'চুলি কটা / নাপিত (Barber / Salon)', label_en: 'Barber' },
+    { key: 'Tent_Sound', label_as: 'পেণ্ডেল / লাইটিং / চাউণ্ড (Tent, Light & Sound)', label_en: 'Tent, Sound & Light' },
+    { key: 'Blacksmith', label_as: 'কমাৰ / লোহাৰ কাম (Blacksmith)', label_en: 'Blacksmith' },
+    { key: 'Potter', label_as: 'কুমাৰ / মাটিৰ কাম (Potter)', label_en: 'Potter' },
+    { key: 'Weaver', label_as: 'তাঁতী / শিপিনী (Weaver / Handloom)', label_en: 'Weaver' },
+    { key: 'Catering_Cook', label_as: 'ৰান্ধনী / কেটাৰিং (Cook & Catering)', label_en: 'Cook & Catering' },
+    { key: 'Other', label_as: 'অন্যান্য কাৰিকৰ (Other Trades)', label_en: 'Other Trades' }
+  ];
+
+  // 3. Extract Dynamic Working Areas from Database Records
   const areaOptions = useMemo(() => {
     const areas = new Set<string>();
     workers.forEach((w) => {
@@ -97,21 +120,7 @@ export const SkilledWorkers: React.FC = () => {
     return Array.from(areas);
   }, [workers]);
 
-  // 3. Trade Category Options
-  const tradeOptions = [
-    { key: 'ALL', label_as: 'সকলো বিভাগ (All Categories)', label_en: 'All Categories' },
-    { key: 'Electrician', label_as: 'বিদ্যুৎ মিস্ত্ৰী (Electrician)', label_en: 'Electrician' },
-    { key: 'Carpenter', label_as: 'কাঠমিস্ত্ৰী (Carpenter)', label_en: 'Carpenter' },
-    { key: 'Plumber', label_as: 'প্লাম্বাৰ (Plumber)', label_en: 'Plumber' },
-    { key: 'Mason', label_as: 'ৰাজমিস্ত্ৰী (Mason)', label_en: 'Mason' },
-    { key: 'Mechanic', label_as: 'মেকানিক (Mechanic)', label_en: 'Mechanic' },
-    { key: 'Tailor', label_as: 'টেইলৰ / দৰ্জী (Tailor)', label_en: 'Tailor' },
-    { key: 'Painter', label_as: 'ৰং মিস্ত্ৰী (Painter)', label_en: 'Painter' },
-    { key: 'Welder', label_as: 'ৱেল্ডাৰ (Welder)', label_en: 'Welder' },
-    { key: 'Other', label_as: 'অন্যান্য (Other Trades)', label_en: 'Other Trades' }
-  ];
-
-  // 4. Combined Filtering Logic
+  // 4. Combined Search and Filter Logic
   const filteredWorkers = useMemo(() => {
     return workers.filter((worker) => {
       const q = searchQuery.toLowerCase().trim();
@@ -120,13 +129,21 @@ export const SkilledWorkers: React.FC = () => {
       const workerName = (worker.full_name || '').toLowerCase();
       const workerPhone = (worker.phone || worker.phone_number || '');
 
-      // Area Filter
+      // Area Filter Match
       const matchesArea = areaFilter === 'ALL' || workerArea.includes(areaFilter.toLowerCase());
 
-      // Category Filter
-      const matchesCategory = categoryFilter === 'ALL' || workerTrade.includes(categoryFilter.toLowerCase());
+      // Category Filter Match
+      let matchesCategory = categoryFilter === 'ALL';
+      if (!matchesCategory) {
+        const cat = categoryFilter.toLowerCase();
+        matchesCategory = workerTrade.includes(cat) ||
+          (categoryFilter === 'Electronics' && (workerTrade.includes('fridge') || workerTrade.includes('ac') || workerTrade.includes('tv') || workerTrade.includes('appliance') || workerTrade.includes('ফ্ৰিজ') || workerTrade.includes('এচি'))) ||
+          (categoryFilter === 'Mobile_Computer' && (workerTrade.includes('mobile') || workerTrade.includes('computer') || workerTrade.includes('মোবাইল') || workerTrade.includes('কম্পিউটাৰ'))) ||
+          (categoryFilter === 'Tent_Sound' && (workerTrade.includes('sound') || workerTrade.includes('light') || workerTrade.includes('tent') || workerTrade.includes('পেণ্ডেল') || workerTrade.includes('মাইক'))) ||
+          (categoryFilter === 'Catering_Cook' && (workerTrade.includes('cook') || workerTrade.includes('catering') || workerTrade.includes('ৰান্ধনী')));
+      }
 
-      // Search Query
+      // Search Match
       const matchesSearch = !q || 
         workerName.includes(q) || 
         workerTrade.includes(q) || 
@@ -147,11 +164,12 @@ export const SkilledWorkers: React.FC = () => {
 
     try {
       setSubmitting(true);
+      const selectedOption = tradeOptions.find(t => t.key === newTrade);
       const payload = {
         full_name: newName.trim(),
         trade: newTrade,
-        skill_en: newTrade,
-        skill_as: tradeOptions.find(t => t.key === newTrade)?.label_as.split(' ')[0] || newTrade,
+        skill_en: selectedOption?.label_en || newTrade,
+        skill_as: selectedOption?.label_as.split(' ')[0] || newTrade,
         area_as: newArea.trim(),
         area_en: newArea.trim(),
         village_area: newArea.trim(),
@@ -201,7 +219,7 @@ export const SkilledWorkers: React.FC = () => {
 
   return (
     <section id="sec-artisans" className="space-y-6">
-      {/* 1. Header & Live Action Buttons */}
+      {/* 1. Header & Quick Action Buttons */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 flex-shrink-0 shadow-inner">
@@ -218,13 +236,13 @@ export const SkilledWorkers: React.FC = () => {
             </div>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
               {isAs 
-                ? 'বিদ্যুৎ মিস্ত্ৰী, কাঠমিস্ত্ৰী, প্লাম্বাৰ আৰু গাঁৱৰ স্থানীয় কাৰিকৰৰ সত্যাপিক যোগাযোগ নম্বৰ' 
-                : 'Verified contact directory of local electricians, carpenters, plumbers, and skilled technicians'}
+                ? 'বিদ্যুৎ মিস্ত্ৰী, কাঠমিস্ত্ৰী, প্লাম্বাৰ আৰু গাঁৱৰ সকলো দক্ষ কাৰিকৰৰ সত্যাপিক যোগাযোগ নিৰ্দেশিকা' 
+                : 'Verified contact directory of all local trade specialists, technicians, and artisans'}
             </p>
           </div>
         </div>
 
-        {/* Action Buttons: Add Worker & Removal Request */}
+        {/* Add Worker & Removal Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
           <button
             type="button"
@@ -247,21 +265,21 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Search & Double Dropdowns (Area & Trade Category) */}
+      {/* 2. Search & Double Dropdowns (Trade Category & Working Area) */}
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-md backdrop-blur-sm grid grid-cols-1 sm:grid-cols-12 gap-3">
-        {/* Search Bar */}
+        {/* Search Input */}
         <div className="sm:col-span-6 relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isAs ? 'কাৰিকৰৰ নাম, কাম বা নম্বৰ সন্ধান কৰক...' : 'Search by name, skill, or phone...'}
+            placeholder={isAs ? 'কাৰিকৰৰ নাম, কাম বা নম্বৰ সন্ধান কৰক...' : 'Search by name, trade, area or phone...'}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 shadow-inner"
           />
         </div>
 
-        {/* Trade Category Dropdown */}
+        {/* Category Dropdown */}
         <div className="sm:col-span-3 relative">
           <Filter className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <select
@@ -299,19 +317,19 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Workers Grid */}
+      {/* 3. Workers Card Grid */}
       {loading ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-16 text-center flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-          <p className="text-xs text-slate-400">{isAs ? 'কাৰিকৰসকলৰ তথ্য সংগ্ৰহ কৰা হৈছে...' : 'Loading artisans directory...'}</p>
+          <p className="text-xs text-slate-400">{isAs ? 'কাৰিকৰসকলৰ তথ্য সংগ্ৰহ কৰা হৈছে...' : 'Loading artisan directory...'}</p>
         </div>
       ) : filteredWorkers.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-12 text-center space-y-2">
           <p className="text-sm font-semibold text-slate-300">
-            {isAs ? 'এই শ্ৰেণী বা অঞ্চলত কোনো কাৰিকৰ পোৱা নগ’ল।' : 'No skilled workers found for the selected filters.'}
+            {isAs ? 'এই শ্ৰেণী বা অঞ্চলত কোনো কাৰিকৰ পোৱা নগ’ল।' : 'No skilled workers found matching selected criteria.'}
           </p>
           <p className="text-xs text-slate-500">
-            {isAs ? 'অনুগ্ৰহ কৰি আন বিভাগ বা অঞ্চল নিৰ্বাচন কৰক।' : 'Try selecting another trade category or village area.'}
+            {isAs ? 'অনুগ্ৰহ কৰি আন বিভাগ বা অঞ্চল বাছনি কৰক।' : 'Try selecting another trade category or area filter.'}
           </p>
         </div>
       ) : (
@@ -392,11 +410,9 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       )}
 
-      {/* ========================================================
-          MODAL 1: ADD WORKER FORM
-         ======================================================== */}
+      {/* MODAL 1: ADD WORKER FORM */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative">
             <button
               onClick={() => setShowAddModal(false)}
@@ -496,11 +512,9 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       )}
 
-      {/* ========================================================
-          MODAL 2: REMOVAL REQUEST FORM
-         ======================================================== */}
+      {/* MODAL 2: REMOVAL REQUEST FORM */}
       {showRemovalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative">
             <button
               onClick={() => setShowRemovalModal(false)}
@@ -556,7 +570,7 @@ export const SkilledWorkers: React.FC = () => {
                   rows={2}
                   value={removalReason}
                   onChange={(e) => setRemovalReason(e.target.value)}
-                  placeholder={isAs ? 'যেনে: বৰ্তমান উপলব্ধ নহয় বা ঠাই সলনি' : 'e.g. Relocated or no longer offering service'}
+                  placeholder={isAs ? 'যেনে: স্থান সলনি বা বৰ্তমান উপলব্ধ নহয়' : 'e.g. Relocated or no longer available'}
                   className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
                 />
               </div>
