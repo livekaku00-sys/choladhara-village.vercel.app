@@ -20,22 +20,16 @@ import { supabase } from '../lib/supabase';
 export interface SkilledWorker {
   id: string | number;
   full_name: string;
-  skill?: string;
-  skill_as?: string;
-  skill_en?: string;
-  trade?: string;
-  village_area?: string;
-  area?: string;
-  area_as?: string;
-  area_en?: string;
-  phone?: string;
-  phone_number?: string;
-  is_verified?: boolean;
-  is_available?: boolean;
-  created_at?: string;
+  skill_en: string;
+  skill_as: string;
+  phone_number: string;
+  chuburi_ward: string;
+  experience_years?: number;
+  is_verified: boolean;
+  submitted_at?: string;
 }
 
-// 1. Predefined Regional Working Areas
+// 1. Designated Working Places / Regional Areas
 const PREDEFINED_AREAS = [
   { key: 'Choladhara', as: 'চোলাধৰা (Choladhara)', en: 'Choladhara' },
   { key: 'Tengapukhuri', as: 'টেঙাপুখুৰী (Tengapukhuri)', en: 'Tengapukhuri' },
@@ -93,7 +87,7 @@ export const SkilledWorkers: React.FC = () => {
 
       if (error) throw error;
       if (data) {
-        setWorkers(data);
+        setWorkers(data as SkilledWorker[]);
       }
     } catch (err) {
       console.error('Error loading skilled workers:', err);
@@ -102,7 +96,7 @@ export const SkilledWorkers: React.FC = () => {
     }
   };
 
-  // 2. Complete Professional Categories List
+  // 2. Complete Professional Categories List with Dual Language Names
   const tradeOptions = [
     { key: 'ALL', label_as: 'সকলো বিভাগ (All Categories)', label_en: 'All Categories' },
     { key: 'Electrician', label_as: 'বিদ্যুৎ মিস্ত্ৰী (Electrician)', label_en: 'Electrician' },
@@ -125,7 +119,7 @@ export const SkilledWorkers: React.FC = () => {
     { key: 'Other', label_as: 'অন্যান্য কাৰিকৰ (Other Trades)', label_en: 'Other Trades' }
   ];
 
-  // 3. Dynamic Area Filter Options
+  // 3. Dynamic Area Filter Options (Aggregates predefined + custom registered locations from chuburi_ward)
   const combinedAreaOptions = useMemo(() => {
     const areaMap = new Map<string, { as: string; en: string }>();
 
@@ -134,7 +128,7 @@ export const SkilledWorkers: React.FC = () => {
     });
 
     workers.forEach((w) => {
-      const area = w.village_area || w.area || w.area_as || w.area_en;
+      const area = w.chuburi_ward;
       if (area && area.trim() && !areaMap.has(area.trim().toLowerCase())) {
         areaMap.set(area.trim().toLowerCase(), { as: area.trim(), en: area.trim() });
       }
@@ -151,29 +145,31 @@ export const SkilledWorkers: React.FC = () => {
   const filteredWorkers = useMemo(() => {
     return workers.filter((worker) => {
       const q = searchQuery.toLowerCase().trim();
-      const workerTrade = (worker.trade || worker.skill || worker.skill_en || worker.skill_as || '').toLowerCase();
-      const workerArea = (worker.village_area || worker.area || worker.area_as || worker.area_en || '').toLowerCase();
+      const workerSkillEn = (worker.skill_en || '').toLowerCase();
+      const workerSkillAs = (worker.skill_as || '').toLowerCase();
+      const workerArea = (worker.chuburi_ward || '').toLowerCase();
       const workerName = (worker.full_name || '').toLowerCase();
-      const workerPhone = (worker.phone_number || worker.phone || '');
+      const workerPhone = (worker.phone_number || '');
 
-      // Working Area Match
+      // Working Area Match (chuburi_ward)
       const matchesArea = areaFilter === 'ALL' || workerArea.includes(areaFilter.toLowerCase());
 
       // Category Match
       let matchesCategory = categoryFilter === 'ALL';
       if (!matchesCategory) {
         const cat = categoryFilter.toLowerCase();
-        matchesCategory = workerTrade.includes(cat) ||
-          (categoryFilter === 'Electronics' && (workerTrade.includes('fridge') || workerTrade.includes('ac') || workerTrade.includes('tv') || workerTrade.includes('appliance') || workerTrade.includes('ফ্ৰিজ') || workerTrade.includes('এচি'))) ||
-          (categoryFilter === 'Mobile_Computer' && (workerTrade.includes('mobile') || workerTrade.includes('computer') || workerTrade.includes('মোবাইল') || workerTrade.includes('কম্পিউটাৰ'))) ||
-          (categoryFilter === 'Tent_Sound' && (workerTrade.includes('sound') || workerTrade.includes('light') || workerTrade.includes('tent') || workerTrade.includes('পেণ্ডেল') || workerTrade.includes('মাইক'))) ||
-          (categoryFilter === 'Catering_Cook' && (workerTrade.includes('cook') || workerTrade.includes('catering') || workerTrade.includes('ৰান্ধনী')));
+        matchesCategory = workerSkillEn.includes(cat) || workerSkillAs.includes(cat) ||
+          (categoryFilter === 'Electronics' && (workerSkillEn.includes('electronics') || workerSkillEn.includes('appliance') || workerSkillAs.includes('টিভি') || workerSkillAs.includes('ফ্ৰিজ'))) ||
+          (categoryFilter === 'Mobile_Computer' && (workerSkillEn.includes('mobile') || workerSkillEn.includes('computer') || workerSkillAs.includes('মোবাইল') || workerSkillAs.includes('কম্পিউটাৰ'))) ||
+          (categoryFilter === 'Tent_Sound' && (workerSkillEn.includes('tent') || workerSkillEn.includes('sound') || workerSkillAs.includes('পেণ্ডেল') || workerSkillAs.includes('চাউণ্ড'))) ||
+          (categoryFilter === 'Catering_Cook' && (workerSkillEn.includes('cook') || workerSkillEn.includes('catering') || workerSkillAs.includes('ৰান্ধনী')));
       }
 
       // Search Query Match
       const matchesSearch = !q || 
         workerName.includes(q) || 
-        workerTrade.includes(q) || 
+        workerSkillEn.includes(q) || 
+        workerSkillAs.includes(q) || 
         workerArea.includes(q) || 
         workerPhone.includes(q);
 
@@ -181,7 +177,7 @@ export const SkilledWorkers: React.FC = () => {
     });
   }, [workers, searchQuery, areaFilter, categoryFilter]);
 
-  // Handle Add Worker Submission with Clean Schema-Safe Payload
+  // Handle Add Worker Submission matching exact database schema
   const handleAddWorkerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newPhone.trim()) {
@@ -196,16 +192,23 @@ export const SkilledWorkers: React.FC = () => {
 
     try {
       setSubmitting(true);
+      const selectedTradeOption = tradeOptions.find(t => t.key === newTrade);
 
-      const finalArea = selectedAreaOption === 'OTHER' 
-        ? customArea.trim() 
-        : selectedAreaOption;
+      // Determine final area name for chuburi_ward
+      let finalArea = '';
+      if (selectedAreaOption === 'OTHER') {
+        finalArea = customArea.trim();
+      } else {
+        const found = PREDEFINED_AREAS.find(p => p.key === selectedAreaOption);
+        finalArea = found ? found.en : selectedAreaOption;
+      }
 
-      // Schema-safe payload: Only send real database table columns
+      // Exact database schema payload
       const payload = {
         full_name: newName.trim(),
-        trade: newTrade,
-        village_area: finalArea,
+        skill_en: selectedTradeOption ? selectedTradeOption.label_en : newTrade,
+        skill_as: selectedTradeOption ? selectedTradeOption.label_as.split(' ')[0] : newTrade,
+        chuburi_ward: finalArea,
         phone_number: newPhone.trim(),
         is_verified: false
       };
@@ -298,7 +301,7 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Search & Dual Dropdown Filters */}
+      {/* 2. Search & Dual Dropdown Filters (Category & Working Area / chuburi_ward) */}
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-md backdrop-blur-sm grid grid-cols-1 sm:grid-cols-12 gap-3">
         {/* Search Bar */}
         <div className="sm:col-span-6 relative">
@@ -368,13 +371,9 @@ export const SkilledWorkers: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredWorkers.map((worker) => {
-            const skill = isAs 
-              ? (worker.skill_as || worker.skill || worker.trade || worker.skill_en || '') 
-              : (worker.skill_en || worker.skill || worker.trade || worker.skill_as || '');
-            const area = isAs
-              ? (worker.village_area || worker.area || worker.area_as || worker.area_en || '')
-              : (worker.village_area || worker.area || worker.area_en || worker.area_as || '');
-            const phone = worker.phone_number || worker.phone || '';
+            const skill = isAs ? (worker.skill_as || worker.skill_en) : (worker.skill_en || worker.skill_as);
+            const area = worker.chuburi_ward;
+            const phone = worker.phone_number;
 
             return (
               <div
@@ -516,6 +515,7 @@ export const SkilledWorkers: React.FC = () => {
                   </option>
                 </select>
 
+                {/* Blank input box when "Other" is selected */}
                 {selectedAreaOption === 'OTHER' && (
                   <div className="space-y-1 animate-fade-in pt-1">
                     <label className="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
