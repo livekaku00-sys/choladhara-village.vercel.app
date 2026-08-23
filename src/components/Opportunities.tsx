@@ -26,7 +26,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'pmegp-2026',
     title: "Prime Minister's Employment Generation Programme (PMEGP)",
     category: '10th',
-    categoryBadge: '০ম উত্তীৰ্ণ / সাধাৰণ (General & 10th+)',
+    categoryBadge: '১০ম উত্তীৰ্ণ / সাধাৰণ (General & 10th+)',
     department: 'Ministry of MSME / KVIC',
     deadline: '2026-12-31',
     applyUrl: 'https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp',
@@ -137,6 +137,11 @@ export const Opportunities: React.FC = () => {
     return diffDays <= 7 && diffDays >= 0;
   };
 
+  const handleWhatsAppShare = (item: Opportunity) => {
+    const text = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
@@ -162,7 +167,7 @@ export const Opportunities: React.FC = () => {
               চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
             </p>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
+              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰেশৰ সঠিক লিংক
             </p>
           </div>
         </div>
@@ -211,7 +216,7 @@ export const Opportunities: React.FC = () => {
               <Search className="w-8 h-8 text-slate-500" />
             </div>
             <p className="text-base font-semibold text-slate-300 mb-1">
-              কোনো ফলাফল পোৱা নগ’ল
+              কোনো ফলাফল পোা নগ’ল
             </p>
             <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
               আপুনি বিচৰা ধৰণৰ জাননী এতিয়া উপলব্ধ নাই। অনুগ্ৰহ কৰি আন কিৱৰ্ড বা শ্ৰেণী চেষ্টা কৰক।
@@ -221,23 +226,20 @@ export const Opportunities: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredData.map((item) => {
               const urgent = isDeadlineUrgent(item.deadline);
-              
-              // FIXED: Using wa.me for Desktop Web compatibility
-              const whatsappText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
-              const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
 
               return (
                 <div 
                   key={item.id}
                   className="group relative bg-gradient-to-b from-slate-800/60 to-slate-900/80 
-                             border border-slate-700/50 rounded-2xl overflow-hidden
+                             border border-slate-700/50 rounded-2xl 
                              hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-900/10 
                              hover:-translate-y-1 transition-all duration-300 ease-out 
                              flex flex-col"
                 >
                   {/* Top accent line on hover */}
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl"></div>
 
+                  {/* Content Area - flex-1 pushes button bar to bottom naturally */}
                   <div className="p-5 space-y-3 flex-1 flex flex-col">
                     <div className="flex items-start justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 rounded-md shadow-sm">
@@ -265,14 +267,13 @@ export const Opportunities: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Description with mt-auto to push button bar down naturally */}
                     <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 pt-3 mt-auto line-clamp-3">
                       {item.description}
                     </p>
                   </div>
 
-                  {/* FIXED: WhatsApp button with brand color + MessageCircle icon + label */}
-                  <div className="relative z-10 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm">
+                  {/* FIXED: Button bar with min-height, no overflow-hidden parent, explicit z-index */}
+                  <div className="relative z-10 p-4 bg-slate-950/90 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm min-h-[64px]">
                     <a
                       href={item.applyUrl}
                       target="_blank"
@@ -283,19 +284,18 @@ export const Opportunities: React.FC = () => {
                       <ArrowUpRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                     </a>
 
-                    <a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    {/* FIXED: Button tag + WhatsApp brand color + MessageCircle + Assamese label */}
+                    <button
+                      onClick={() => handleWhatsAppShare(item)}
                       title="হোৱাটছএপত শ্বেয়াৰ কৰক"
                       className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 
                                  bg-[#25D366] hover:bg-[#1da851] text-white 
                                  rounded-xl text-xs font-bold shadow-md shadow-green-900/20 
-                                 transition-all active:scale-[0.98] whitespace-nowrap"
+                                 transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4 fill-current" />
                       <span>শ্বেয়াৰ</span>
-                    </a>
+                    </button>
                   </div>
                 </div>
               );
