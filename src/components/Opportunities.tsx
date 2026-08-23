@@ -46,11 +46,11 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'cmaaa-assam-2026',
     title: "Chief Minister's Atmanirbhar Asom Abhijan (CMAAA 2.0)",
     category: '12th',
-    categoryBadge: '১২শ উত্তীৰ্ণ / স্নাতক (12th / Degree)',
+    categoryBadge: '১শ উত্তীৰ্ণ / স্নাতক (12th / Degree)',
     department: 'Govt. of Assam',
     deadline: '2026-11-15',
     applyUrl: 'https://cmaaa.assam.gov.in/',
-    description: 'অসমৰ নিবনুৱা যুৱক-যুৱতীসকলক স্ব-নিয়োজন আৰু ব্যৱসায় স্থাপনৰ বাবে ₹২ লাখৰ পৰা ₹৫ লাখ টকাৰ এককালীন সাহায্য আৰু ঋণ।'
+    description: 'অসমৰ নিবনুৱা যুক-যুৱতীসকলক স্ব-নিয়োজন আৰু ব্যৱসায় স্থাপনৰ বাবে ₹২ লাখৰ পৰা ₹৫ লাখ টকাৰ এককালীন সাহায্য আৰু ঋণ।'
   },
   {
     id: 'ssc-gd-2026',
@@ -66,7 +66,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'slprb-assam-police-2026',
     title: 'Assam Police SLPRB Constable & Sub-Inspector Recruitment',
     category: '12th',
-    categoryBadge: '১২শ উত্তীৰ্ণ (12th / HS Pass)',
+    categoryBadge: '২শ উত্তীৰ্ণ (12th / HS Pass)',
     department: 'State Level Police Recruitment Board (SLPRB Assam)',
     deadline: '2026-10-30',
     applyUrl: 'https://slprbassam.in/',
@@ -96,7 +96,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'assam-bed-cet-2026',
     title: 'Assam B.Ed Common Entrance Test (GUBEDCET / DUBEDCET)',
     category: 'entrance',
-    categoryBadge: 'প্ৰেশ পৰীক্ষা (Entrance Exam - B.Ed)',
+    categoryBadge: 'প্ৰৱেশ পৰীক্ষা (Entrance Exam - B.Ed)',
     department: 'Gauhati & Dibrugarh University',
     deadline: '2026-09-30',
     applyUrl: 'https://dibru.ac.in/',
@@ -138,8 +138,8 @@ export const Opportunities: React.FC = () => {
   };
 
   const handleWhatsAppShare = (item: Opportunity) => {
-    const text = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const text = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n অফিচিয়েল লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -167,7 +167,7 @@ export const Opportunities: React.FC = () => {
               চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
             </p>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰেশৰ সঠিক লিংক
+              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
             </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export const Opportunities: React.FC = () => {
               <Search className="w-8 h-8 text-slate-500" />
             </div>
             <p className="text-base font-semibold text-slate-300 mb-1">
-              কোনো ফলাফল পোা নগ’ল
+              কোনো ফলাফল পোৱা নগ’ল
             </p>
             <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
               আপুনি বিচৰা ধৰণৰ জাননী এতিয়া উপলব্ধ নাই। অনুগ্ৰহ কৰি আন কিৱৰ্ড বা শ্ৰেণী চেষ্টা কৰক।
@@ -284,14 +284,16 @@ export const Opportunities: React.FC = () => {
                       <ArrowUpRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                     </a>
 
-                    {/* FIXED: Button tag + WhatsApp brand color + MessageCircle + Assamese label */}
+                    {/* FIXED: Added type="button", cursor-pointer, enhanced hover/active states */}
                     <button
+                      type="button"
                       onClick={() => handleWhatsAppShare(item)}
                       title="হোৱাটছএপত শ্বেয়াৰ কৰক"
                       className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 
-                                 bg-[#25D366] hover:bg-[#1da851] text-white 
+                                 bg-[#25D366] hover:bg-[#1da851] active:bg-[#178a42] text-white 
                                  rounded-xl text-xs font-bold shadow-md shadow-green-900/20 
-                                 transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer"
+                                 transition-all duration-150 active:scale-95 cursor-pointer 
+                                 hover:shadow-lg hover:shadow-green-900/30 hover:-translate-y-0.5"
                     >
                       <MessageCircle className="w-4 h-4 fill-current" />
                       <span>শ্বেয়াৰ</span>
