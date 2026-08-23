@@ -20,12 +20,14 @@ import { supabase } from '../lib/supabase';
 export interface SkilledWorker {
   id: string | number;
   full_name: string;
+  skill?: string;
   skill_as?: string;
   skill_en?: string;
   trade?: string;
+  village_area?: string;
+  area?: string;
   area_as?: string;
   area_en?: string;
-  village_area?: string;
   phone?: string;
   phone_number?: string;
   is_verified?: boolean;
@@ -123,7 +125,7 @@ export const SkilledWorkers: React.FC = () => {
     { key: 'Other', label_as: 'অন্যান্য কাৰিকৰ (Other Trades)', label_en: 'Other Trades' }
   ];
 
-  // 3. Dynamic Area Filter Options (Aggregates predefined + custom registered locations)
+  // 3. Dynamic Area Filter Options
   const combinedAreaOptions = useMemo(() => {
     const areaMap = new Map<string, { as: string; en: string }>();
 
@@ -132,7 +134,7 @@ export const SkilledWorkers: React.FC = () => {
     });
 
     workers.forEach((w) => {
-      const area = w.area_as || w.area_en || w.village_area;
+      const area = w.village_area || w.area || w.area_as || w.area_en;
       if (area && area.trim() && !areaMap.has(area.trim().toLowerCase())) {
         areaMap.set(area.trim().toLowerCase(), { as: area.trim(), en: area.trim() });
       }
@@ -149,10 +151,10 @@ export const SkilledWorkers: React.FC = () => {
   const filteredWorkers = useMemo(() => {
     return workers.filter((worker) => {
       const q = searchQuery.toLowerCase().trim();
-      const workerTrade = (worker.trade || worker.skill_en || worker.skill_as || '').toLowerCase();
-      const workerArea = (worker.area_as || worker.area_en || worker.village_area || '').toLowerCase();
+      const workerTrade = (worker.trade || worker.skill || worker.skill_en || worker.skill_as || '').toLowerCase();
+      const workerArea = (worker.village_area || worker.area || worker.area_as || worker.area_en || '').toLowerCase();
       const workerName = (worker.full_name || '').toLowerCase();
-      const workerPhone = (worker.phone || worker.phone_number || '');
+      const workerPhone = (worker.phone_number || worker.phone || '');
 
       // Working Area Match
       const matchesArea = areaFilter === 'ALL' || workerArea.includes(areaFilter.toLowerCase());
@@ -179,7 +181,7 @@ export const SkilledWorkers: React.FC = () => {
     });
   }, [workers, searchQuery, areaFilter, categoryFilter]);
 
-  // Handle Add Worker Submission
+  // Handle Add Worker Submission with Clean Schema-Safe Payload
   const handleAddWorkerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newPhone.trim()) {
@@ -194,31 +196,16 @@ export const SkilledWorkers: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const selectedTradeOption = tradeOptions.find(t => t.key === newTrade);
 
-      // Determine final area name
-      let finalAreaAs = '';
-      let finalAreaEn = '';
+      const finalArea = selectedAreaOption === 'OTHER' 
+        ? customArea.trim() 
+        : selectedAreaOption;
 
-      if (selectedAreaOption === 'OTHER') {
-        const customValue = customArea.trim();
-        finalAreaAs = customValue;
-        finalAreaEn = customValue;
-      } else {
-        const found = PREDEFINED_AREAS.find(p => p.key === selectedAreaOption);
-        finalAreaAs = found ? found.as.split(' ')[0] : selectedAreaOption;
-        finalAreaEn = found ? found.en : selectedAreaOption;
-      }
-
+      // Schema-safe payload: Only send real database table columns
       const payload = {
         full_name: newName.trim(),
         trade: newTrade,
-        skill_en: selectedTradeOption?.label_en || newTrade,
-        skill_as: selectedTradeOption?.label_as.split(' ')[0] || newTrade,
-        area_as: finalAreaAs,
-        area_en: finalAreaEn,
-        village_area: finalAreaEn,
-        phone: newPhone.trim(),
+        village_area: finalArea,
         phone_number: newPhone.trim(),
         is_verified: false
       };
@@ -311,7 +298,7 @@ export const SkilledWorkers: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Search & Dual Dropdown Filters (Category & Working Area) */}
+      {/* 2. Search & Dual Dropdown Filters */}
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-md backdrop-blur-sm grid grid-cols-1 sm:grid-cols-12 gap-3">
         {/* Search Bar */}
         <div className="sm:col-span-6 relative">
@@ -382,12 +369,12 @@ export const SkilledWorkers: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredWorkers.map((worker) => {
             const skill = isAs 
-              ? (worker.skill_as || worker.skill_en || worker.trade || '') 
-              : (worker.skill_en || worker.skill_as || worker.trade || '');
+              ? (worker.skill_as || worker.skill || worker.trade || worker.skill_en || '') 
+              : (worker.skill_en || worker.skill || worker.trade || worker.skill_as || '');
             const area = isAs
-              ? (worker.area_as || worker.village_area || worker.area_en || '')
-              : (worker.area_en || worker.village_area || worker.area_as || '');
-            const phone = worker.phone || worker.phone_number || '';
+              ? (worker.village_area || worker.area || worker.area_as || worker.area_en || '')
+              : (worker.village_area || worker.area || worker.area_en || worker.area_as || '');
+            const phone = worker.phone_number || worker.phone || '';
 
             return (
               <div
@@ -509,7 +496,7 @@ export const SkilledWorkers: React.FC = () => {
                 </select>
               </div>
 
-              {/* Working Area Selection & "Other" Blank Input Box */}
+              {/* Working Area Selection & "Other" Custom Box */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">
                   {isAs ? 'কৰ্ম স্থান / এলেকা (Working Area) *' : 'Working Place / Area *'}
@@ -529,7 +516,6 @@ export const SkilledWorkers: React.FC = () => {
                   </option>
                 </select>
 
-                {/* Blank input box conditionally rendered when "Other" is selected */}
                 {selectedAreaOption === 'OTHER' && (
                   <div className="space-y-1 animate-fade-in pt-1">
                     <label className="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
@@ -542,7 +528,7 @@ export const SkilledWorkers: React.FC = () => {
                       autoFocus
                       value={customArea}
                       onChange={(e) => setCustomArea(e.target.value)}
-                      placeholder={isAs ? 'যেনে: বৰুৱা চুক, ঐতিহাসিক পুখুৰী পাৰ...' : 'e.g. Boruah Chuk, Station Road...'}
+                      placeholder={isAs ? 'যেনে: বৰুৱা চুক, মৰাণ পথ...' : 'e.g. Boruah Chuk, Station Road...'}
                       className="w-full px-3.5 py-2.5 bg-slate-950 border border-amber-500/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-md shadow-amber-500/10"
                     />
                   </div>
