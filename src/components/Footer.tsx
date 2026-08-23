@@ -7,7 +7,8 @@ import {
   UserMinus, 
   Info, 
   CheckCircle2, 
-  ExternalLink 
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -15,15 +16,16 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
-      {/* ১. মূল তথ্যৰ অংশ (Main Grid) */}
+      
+      {/* 1. Main Village & Contact Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
-          {/* স্তম্ভ ১: প’ৰ্টেলৰ বিষয়ে */}
+          {/* Column 1: About Portal */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <span className="w-2 h-4 bg-emerald-500 rounded-full inline-block"></span>
-              প’ৰ্টেলৰ বিষয়ে
+              প’ৰ্টেলৰ বিষয়ে (About Portal)
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               চোলাধৰা গ্ৰাম্য সেৱা আৰু তথ্য প’ৰ্টেল হৈছে স্থানীয় যুৱ স্বেচ্ছাসেৱকসকলৰ দ্বাৰা পৰিচালিত এক স্বতন্ত্ৰ ডিজিটেল তথ্য কেন্দ্ৰ।
@@ -34,15 +36,15 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* স্তম্ভ ২: জৰুৰী যোগাযোগ */}
+          {/* Column 2: Emergency Contacts */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Phone className="w-4 h-4 text-rose-500" />
-              জৰুৰী যোগাযোগ
+              জৰুৰী যোগাযোগ (Emergency)
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               <li className="flex items-center justify-between bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-300">এম্বুলেন্স সেৱা:</span>
+                <span className="text-slate-300">এম্বুলেন্স সেৱা (Ambulance):</span>
                 <a href="tel:108" className="font-bold text-rose-400 hover:text-rose-300 bg-rose-950/50 px-2 py-0.5 rounded border border-rose-800/40">108</a>
               </li>
               <li className="flex items-center justify-between bg-slate-900/80 p-2 rounded-lg border border-slate-800">
@@ -60,32 +62,32 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* স্তম্ভ ৩: স্বেচ্ছাসেৱকৰ যোগাযোগ */}
+          {/* Column 3: Help Desk */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Mail className="w-4 h-4 text-sky-400" />
-              স্বেচ্ছাসেৱকৰ যোগাযোগ
+              স্বেচ্ছাসেৱকৰ যোগাযোগ (Help Desk)
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               তালিকাত তথ্য অন্তৰ্ভুক্ত কৰিবলৈ অথবা যিকোনো ভুল তথ্য শুধৰণিৰ বাবে যোগাযোগ কৰক:
             </p>
             <a 
               href="mailto:choladhara.village@gmail.com" 
-              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2 rounded-lg break-all font-medium transition hover:border-sky-700"
+              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2.5 rounded-lg break-all font-medium transition hover:border-sky-700"
             >
               <Mail className="w-3.5 h-3.5 flex-shrink-0" />
               choladhara.village@gmail.com
             </a>
           </div>
 
-          {/* স্তম্ভ ৪: কেৱল ১টা মাত্ৰ বুটাম (প্ৰত্যাহাৰৰ অনুৰোধ প্ৰপত্ৰ) */}
+          {/* Column 4: Single Action Button */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <UserMinus className="w-4 h-4 text-rose-400" />
-              প্ৰপত্ৰ
+              প্ৰপত্ৰ (Request Form)
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              প’ৰ্টেলৰ তালিকাৰ পৰা কোনো কাৰিকৰ বা ব্যক্তিৰ নাম আঁতৰাবৰ বাবে তলৰ বুটামটোত ক্লিক কৰক:
+              প’ৰ্টেলৰ তালিকাৰ পৰা কোনো কাৰিকৰ বা ব্যক্তিৰ নাম আঁতৰাবৰ বাবে তলৰ বুটামটো ব্যৱহাৰ কৰক:
             </p>
             <a
               href="mailto:choladhara.village@gmail.com?subject=কাৰিকৰ%20বা%20নাম%20প্ৰত্যাহাৰৰ%20অনুৰোধ%20প্ৰপত্ৰ"
@@ -102,14 +104,15 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* ২. আইনী অস্বীকৃতি আৰু চৰ্তসমূহ (Legal Disclaimer Section) */}
-      <div className="w-full bg-slate-900/70 border-t border-b border-slate-800/80 py-5 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto space-y-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      {/* 2. Bilingual Privacy Policy & Legal Disclaimer Strip */}
+      <div className="w-full bg-slate-900/80 border-t border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-4">
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-3">
             <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs sm:text-sm">
               <ShieldAlert className="w-4 h-4 flex-shrink-0" />
               <span>
-                {lang === 'as' ? 'আইনী অস্বীকৃতি আৰু ব্যৱহাৰৰ চৰ্তসমূহ' : 'Legal Disclaimer & Terms of Service'}
+                {lang === 'as' ? 'আইনী অস্বীকৃতি, গোপনীয়তা নীতি আৰু চৰ্তসমূহ' : 'Legal Disclaimer, Privacy Policy & Terms'}
               </span>
             </div>
 
@@ -117,7 +120,7 @@ export const Footer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLang('as')}
-                className={`px-2.5 py-0.5 rounded font-medium transition ${
+                className={`px-3 py-1 rounded font-medium transition ${
                   lang === 'as'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -128,7 +131,7 @@ export const Footer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-0.5 rounded font-medium transition ${
+                className={`px-3 py-1 rounded font-medium transition ${
                   lang === 'en'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -140,58 +143,75 @@ export const Footer: React.FC = () => {
           </div>
 
           {lang === 'as' ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-400 leading-relaxed">
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed">
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-sky-400" />
-                  ১. অনা-চৰকাৰী সমাজ সেৱা
+                  ১. অনা-চৰকাৰী সমাজ কল্যাণ সেৱা
                 </span>
-                <p>এই পৰ্টেলটো সমাজ কল্যাণ আৰু নিযুক্তিৰ তথ্য যোগানৰ এক স্বতন্ত্ৰ সেৱা। ই কোনো চৰকাৰী বিভাগ নহয়।</p>
+                <p>
+                  এই পৰ্টেলটো সমাজ কল্যাণ আৰু নিযুক্তিৰ তথ্য যোগানৰ এক বিনামূলীয়া তথ্য সেৱা। ই কোনো চৰকাৰী বিভাগ বা আয়োগৰ আনুষ্ঠানিক ৱেবছাইট নহয়।
+                </p>
               </div>
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  ২. তথ্যৰ চৰকাৰী উৎস
+                  ২. তথ্যৰ উৎস আৰু সতৰ্কতা
                 </span>
-                <p>সকলো জাননী আনুষ্ঠানিক চৰকাৰী পৰ্টেল (.gov.in / .nic.in) পৰা সংগ্ৰহ কৰা। মূল বিজ্ঞাপন পৰীক্ষা কৰিবলৈ অনুৰোধ জনোৱা হ’ল।</p>
+                <p>
+                  সকলো তথ্য চৰকাৰী মূল পৰ্টেল (.gov.in / .nic.in) আৰু ৰাজহুৱা বিজ্ঞাপনৰ পৰা সংগ্ৰহ কৰা হৈছে। প্ৰাৰ্থীয়ে আবেদন কৰাৰ পূৰ্বে মূল জাননী পৰীক্ষা কৰা উচিত।
+                </p>
               </div>
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
-                  <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
-                  ৩. কোনো মাচুল লোৱা নহয়
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  ৩. কোনো মাচুল বা ধন লোৱা নহয়
                 </span>
-                <p>পৰ্টেলৰ দ্বাৰা কোনো পঞ্জীয়ন ধন লোৱা নহয়। প্ৰাৰ্থীয়ে আবেদন কৰিবলৈ চৰকাৰী মূল লিংকহে ব্যৱহাৰ কৰিব লাগে।</p>
+                <p>
+                  এই পৰ্টেলৰ দ্বাৰা কোনো ধৰণৰ অনলাইন মাচুল বা ধন লোৱা নহয়। সকলো আবেদন লিংক মূল চৰকাৰী ৱেবছাইটলৈ প্ৰেৰণ কৰা হয়। কোনো ভুৱা ব্যক্তিক ধন নিদিব।
+                </p>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-400 leading-relaxed">
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed">
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-sky-400" />
-                  1. Non-Government Initiative
+                  1. Independent Welfare Initiative
                 </span>
-                <p>Independent community portal built for public awareness. Not affiliated with any govt authority.</p>
+                <p>
+                  This portal is a community-driven initiative created solely for public awareness and youth guidance. It is not affiliated with any government agency.
+                </p>
               </div>
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  2. Official Sourcing
+                  2. Official Sourcing & Fair Use
                 </span>
-                <p>Recruitment data aggregated from verified .gov.in/.nic.in notice boards for public dissemination.</p>
+                <p>
+                  All notices are aggregated directly from public government bulletin boards (.gov.in / .nic.in). Users must verify eligibility on the authentic authority portals.
+                </p>
               </div>
-              <div className="bg-slate-950/40 p-2.5 rounded border border-slate-800/50 space-y-1">
+
+              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
-                  <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
-                  3. Zero Charges
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  3. Zero Financial Transactions
                 </span>
-                <p>We do not collect application fees. All application buttons redirect to authentic government websites.</p>
+                <p>
+                  We never charge application fees or collect banking data. All application buttons redirect to official portals. Beware of fraudulent recruitment agents.
+                </p>
               </div>
             </div>
           )}
+
         </div>
       </div>
 
-      {/* ৩. কপিৰাইট আৰু ক্ৰেডিট বাৰ (Copyright Bottom Bar) */}
+      {/* 3. Bottom Copyright Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
         <p className="text-center sm:text-left">
           © 2026 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল। | গাঁৱৰ যুৱসমাজৰ দ্বাৰা নিৰ্মিত
