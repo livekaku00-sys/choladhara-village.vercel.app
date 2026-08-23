@@ -135,138 +135,134 @@ export const Opportunities: React.FC = () => {
   };
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      
-      {/* High-Contrast Section Header */}
-      <div className="text-center space-y-3 mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30 backdrop-blur-sm">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-          <span>প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল</span>
-        </div>
+    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Dark container card ensures crisp contrast anywhere */}
+      <div className="bg-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl">
         
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-          কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ
-        </h2>
-        
-        <div className="space-y-1">
-          <p className="text-sm sm:text-base font-semibold text-emerald-400">
-            চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
-          </p>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
-          </p>
-        </div>
-      </div>
-
-      {/* Search & Category Filter Controls */}
-      <div className="space-y-4 mb-8">
-        <div className="relative max-w-xl mx-auto">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-inner"
-          />
+        {/* Header Block */}
+        <div className="text-center space-y-3 mb-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 text-xs font-semibold border border-emerald-800/80">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল</span>
+          </div>
+          
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ
+          </h2>
+          
+          <div className="space-y-1">
+            <p className="text-sm sm:text-base font-bold text-emerald-400">
+              চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
+            </p>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
+            </p>
+          </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {[
-            { key: 'all', label: 'সকলো সুবিধা (All Notices)' },
-            { key: '10th', label: '১০ম উত্তীৰ্ণ (10th Pass / Class IV)' },
-            { key: '12th', label: '১২শ উত্তীৰ্ণ (12th / HS Pass)' },
-            { key: 'graduate', label: 'স্নাতক / ডিগ্ৰী (Graduate / Degree)' },
-            { key: 'entrance', label: 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)' }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === tab.key
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950 border border-emerald-500'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+        {/* Search & Tabs */}
+        <div className="space-y-4 mb-8">
+          <div className="relative max-w-xl mx-auto">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 text-white placeholder-slate-400 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner"
+            />
+          </div>
 
-      {/* Cards Grid */}
-      {filteredData.length === 0 ? (
-        <div className="text-center py-12 bg-slate-900/60 rounded-2xl border border-dashed border-slate-700">
-          <p className="text-sm text-slate-400">আপুনি বিচৰা ধৰণৰ কোনো জাননী পোৱা নগ’ল।</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {[
+              { key: 'all', label: 'সকলো সুবিধা (All Notices)' },
+              { key: '10th', label: '১০ম উত্তীৰ্ণ (10th Pass / Class IV)' },
+              { key: '12th', label: '১২শ উত্তীৰ্ণ (12th / HS Pass)' },
+              { key: 'graduate', label: 'স্নাতক / ডিগ্ৰী (Graduate / Degree)' },
+              { key: 'entrance', label: 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key as any)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  activeTab === tab.key
+                    ? 'bg-emerald-600 text-white shadow-md border border-emerald-500'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredData.map((item) => (
-            <div 
-              key={item.id}
-              className="bg-slate-900/90 rounded-2xl border border-slate-800 hover:border-emerald-500/50 shadow-lg hover:shadow-emerald-950/40 transition-all flex flex-col justify-between overflow-hidden"
-            >
-              <div className="p-5 space-y-3">
-                
-                {/* Badge Row */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 rounded-md">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    {item.categoryBadge}
-                  </span>
-                  
-                  <div className="flex items-center gap-1 text-[11px] font-medium text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-                    <Clock className="w-3 h-3 text-amber-400" />
-                    <span>{item.deadline}</span>
+
+        {/* Cards Grid */}
+        {filteredData.length === 0 ? (
+          <div className="text-center py-12 bg-slate-900/60 rounded-2xl border border-dashed border-slate-800">
+            <p className="text-sm text-slate-400">আপুনি বিচৰা ধৰণৰ কোনো জাননী পোৱা নগ’ল।</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredData.map((item) => (
+              <div 
+                key={item.id}
+                className="bg-slate-900 rounded-2xl border border-slate-800 hover:border-emerald-500/50 shadow-lg transition-all flex flex-col justify-between overflow-hidden"
+              >
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-md">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      {item.categoryBadge}
+                    </span>
+                    
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
+                      <Clock className="w-3 h-3 text-amber-400" />
+                      <span>{item.deadline}</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Title & Department */}
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white leading-snug hover:text-emerald-400 transition">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                    <span>{item.department}</span>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                      <span>{item.department}</span>
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-800 pt-2.5">
+                    {item.description}
                   </p>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-800/80 pt-2.5">
-                  {item.description}
-                </p>
+                <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+                  <a
+                    href={item.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition active:scale-95"
+                  >
+                    <span>মূল বিজ্ঞাপন / আবেদন</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => handleShare(item)}
+                    title="হোৱাটছএপত শ্বেয়াৰ কৰক"
+                    className="inline-flex items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-lg transition"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Action Buttons */}
-              <div className="p-4 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-2">
-                <a
-                  href={item.applyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm transition active:scale-95 hover:shadow-emerald-900/50"
-                >
-                  <span>মূল বিজ্ঞাপন / আবেদন</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => handleShare(item)}
-                  title="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                  className="inline-flex items-center justify-center p-2.5 bg-slate-800 hover:bg-emerald-950/60 text-emerald-400 border border-slate-700 hover:border-emerald-700 rounded-lg transition"
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-              </div>
-
-            </div>
-          ))}
-        </div>
-      )}
-
+      </div>
     </section>
   );
 };
