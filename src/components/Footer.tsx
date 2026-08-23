@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
       
-      {/* 1. Main 4-Column Village Information Grid */}
+      {/* 1. Main 4-Column Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
@@ -210,13 +210,10 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Copyright Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
-        <p className="text-center sm:text-left">
-          © 2026 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল। | গাঁৱৰ যুৱসমাজৰ দ্বাৰা নিৰ্মিত
-        </p>
-        <p className="text-slate-400">
-          তথ্য প্ৰযুক্তি আইন, ২০০০ অনুসৰি নিৰ্মিত
+      {/* 3. Centered Bottom Copyright Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-center">
+        <p className="text-xs text-slate-400 tracking-wide leading-relaxed">
+          © 2026 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল। | গাঁৱৰ যুৱসমাজৰ দ্বাৰা নিৰ্মিত | তথ্য প্ৰযুক্তি আইন, ২০০০ অনুসৰি নিৰ্মিত
         </p>
       </div>
 
