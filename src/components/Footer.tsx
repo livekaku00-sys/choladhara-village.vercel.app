@@ -88,7 +88,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center justify-center md:justify-start gap-2">
               <PhoneCall className="w-4 h-4 text-rose-400 animate-pulse" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {isAs ? 'প্ৰয়োজনীয় জৰুৰীকালীন হেল্পলাইন' : 'Emergency & Essential Helplines'}
+                {isAs ? 'প্ৰয়োজনীয় জৰুৰীকালীন হেল্পলাইন' : 'Emergency & Essential Helplines'}
               </h4>
             </div>
 
@@ -155,7 +155,7 @@ export const Footer: React.FC = () => {
 
         </div>
 
-        {/* Bottom Bar: Copyright | Non-Profit Tag | Discrete Lock Symbol */}
+        {/* Bottom Bar: Copyright | Non-Profit Tag | Discrete Lock Symbol ONLY */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           
           <p>© {new Date().getFullYear()} Choladhara Village Portal. All rights reserved.</p>
@@ -165,17 +165,15 @@ export const Footer: React.FC = () => {
             <span>Community Public Service Initiative</span>
           </div>
 
-          {/* Icon-Only Discrete Admin Login Button */}
-          <div className="flex items-center">
-            <Link
-              to="/admin"
-              className="p-2 rounded-lg text-slate-700 hover:text-amber-400 hover:bg-slate-900 transition active:scale-90"
-              title="Admin Login"
-              aria-label="Admin Login"
-            >
-              <Lock className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          {/* DISCRETE LOCK SYMBOL ONLY - text-slate-700 (invisible to visitors) */}
+          <Link
+            to="/admin"
+            className="p-2 rounded-lg text-slate-700 hover:text-slate-500 transition active:scale-90"
+            title="Admin Login"
+            aria-label="Admin Login"
+          >
+            <Lock className="w-3.5 h-3.5" />
+          </Link>
 
         </div>
 
