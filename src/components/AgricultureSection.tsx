@@ -49,7 +49,6 @@ export const AgricultureSection: React.FC = () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
 
-      // Fetch active schemes: permanent (valid_until IS NULL) OR seasonal (valid_until >= today)
       const { data, error } = await supabase
         .from('agriculture_services')
         .select('*')
@@ -106,16 +105,20 @@ export const AgricultureSection: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Advisory Notice */}
-      <div className="bg-amber-950/30 border border-amber-800/40 rounded-xl p-4 text-amber-200/90 text-xs flex items-start gap-3">
-        <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-        <div>
-          <span className="font-semibold text-amber-300">
-            {isAs ? 'কৃষকৰ বাবে জৰুৰী পৰামৰ্শ (Farmers Advisory Notice): ' : 'Farmers Advisory Notice: '}
+      {/* 2. High-Contrast Advisory Notice Banner */}
+      <div className="bg-slate-900/95 border-2 border-amber-500/60 rounded-2xl p-4 sm:p-5 text-xs flex items-start gap-3.5 shadow-xl">
+        <div className="p-2 bg-amber-500/20 rounded-xl text-amber-400 border border-amber-500/30 flex-shrink-0 mt-0.5">
+          <AlertCircle className="w-5 h-5" />
+        </div>
+        <div className="leading-relaxed">
+          <span className="font-black text-amber-300 text-sm block sm:inline sm:mr-1.5 tracking-tight">
+            {isAs ? 'কৃষকৰ বাবে জৰুৰী পৰামৰ্শ (Farmers Advisory Notice):' : 'Farmers Advisory Notice:'}
           </span>
-          {isAs
-            ? 'সকলো চৰকাৰী অনুদান (PM-KISAN, শস্য বীমা, ট্ৰেক্টৰ ৰেহাই)ৰ বাবে নিজৰ বেংক একাউণ্টৰ সৈতে আধাৰ আৰু ভূমি পঞ্জীয়ন (Land Seeding) লিংক থকাটো বাধ্যতামূলক।'
-            : 'For all government schemes (PM-KISAN, PMFBY, SMAM), Aadhaar-seeded active bank accounts and updated land records are strictly required.'}
+          <span className="text-slate-100 font-semibold text-xs sm:text-[13px]">
+            {isAs
+              ? 'সকলো চৰকাৰী অনুদান (PM-KISAN, শস্য বীমা, ট্ৰেক্টৰ ৰেহাই)ৰ বাবে নিজৰ বেংক একাউণ্টৰ সৈতে আধাৰ আৰু ভূমি পঞ্জীয়ন (Land Seeding) লিংক থকাটো বাধ্যতামূলক।'
+              : 'For all government schemes (PM-KISAN, PMFBY, SMAM), Aadhaar-seeded active bank accounts and updated land records are strictly required.'}
+          </span>
         </div>
       </div>
 
@@ -173,7 +176,7 @@ export const AgricultureSection: React.FC = () => {
         </button>
       </div>
 
-      {/* 4. Dynamic Cards Grid */}
+      {/* 4. Cards Grid */}
       {loading ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-7 h-7 text-emerald-400 animate-spin" />
