@@ -7,19 +7,16 @@ import {
   Wrench, 
   Phone, 
   Bell, 
-  Lock, 
+   
   UserPlus, 
   UserMinus,
   X, 
   MapPin, 
   Briefcase, 
   AlertCircle,
-  Mail,
-  MessageSquare,
+    MessageSquare,
   ShieldAlert,
-  Info,
-  Heart,
-  FileText,
+      FileText,
   Sparkles,
   ShieldCheck,
   Waves
@@ -767,6 +764,7 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
 
 
 
