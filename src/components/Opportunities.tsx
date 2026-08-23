@@ -38,7 +38,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     deadline: '2026-12-31',
     applyUrl: 'https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp',
     description_as: 'গ্ৰাম্য উদ্যোগ, পশুপালন, আৰু ক্ষুদ্ৰ কাৰখানা স্থাপনৰ বাবে ৩৫% পৰ্যন্ত ৰাজসাহায্য (Subsidy) যুক্ত চৰকাৰী ঋণ আঁচনি।',
-    description_en: 'Government subsidized loan scheme with up to 35% subsidy for rural enterprises, livestock, and small manufacturing units.'
+    description_en: 'Government subsidized loan scheme with up to 35% capital subsidy for rural enterprises, livestock, and small manufacturing units.'
   },
   {
     id: 'pm-vishwakarma-2026',
@@ -226,13 +226,13 @@ export const Opportunities: React.FC = () => {
           <div className="space-y-1">
             <p className="text-sm sm:text-base font-bold text-emerald-400 flex items-center justify-center gap-2">
               <Briefcase className="w-4 h-4" />
-              {isAs ? 'চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী' : 'Jobs & Entrance Exam Notifications'}
+              {isAs ? 'চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী' : 'Job & Entrance Exam Notifications'}
             </p>
 
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {isAs
                 ? 'অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক'
-                : 'Verified Assam & Central Government notifications with direct links for jobs, training, and entrance tests.'}
+                : 'Latest verified Assam & Central Govt notifications with direct links for jobs, training, and exams.'}
             </p>
           </div>
         </div>
@@ -244,7 +244,7 @@ export const Opportunities: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isAs ? 'পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক...' : 'Search designation, department or scheme name...'}
+              placeholder={isAs ? 'পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক...' : 'Search designation, department, or scheme name...'}
               className="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-inner transition-all"
             />
           </div>
