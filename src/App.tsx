@@ -20,9 +20,12 @@ export const App: React.FC = () => {
           <Footer />
         </div>
       </BrowserRouter>
-    </LanguageProvider>
+      <Analytics />
+      </LanguageProvider>
   );
 };
 
 export default App;
+
+
 
