@@ -151,10 +151,10 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 4. Dynamic Agriculture Hub */}
-      <AgricultureSection />
+      <div id="sec-agriculture"><AgricultureSection /></div>
 
       {/* 5. Dynamic Scholarships Hub */}
-      <Scholarships />
+      <div id="sec-scholarships"><Scholarships /></div>
 
       {/* 6. Dynamic Opportunities & Careers Hub */}
       <Opportunities />
@@ -166,3 +166,4 @@ export const Home: React.FC = () => {
 };
 
 export default Home;
+
