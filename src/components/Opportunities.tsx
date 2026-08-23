@@ -1,13 +1,13 @@
 ﻿import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  ExternalLink, 
   Share2, 
   CheckCircle2, 
   Building2, 
   Clock,
   Sparkles,
-  Briefcase
+  Briefcase,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface Opportunity {
@@ -46,11 +46,11 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     id: 'cmaaa-assam-2026',
     title: "Chief Minister's Atmanirbhar Asom Abhijan (CMAAA 2.0)",
     category: '12th',
-    categoryBadge: '১২শ উত্তীৰ্ণ / স্নাতক (12th / Degree)',
+    categoryBadge: '১শ উত্তীৰ্ণ / স্নাতক (12th / Degree)',
     department: 'Govt. of Assam',
     deadline: '2026-11-15',
     applyUrl: 'https://cmaaa.assam.gov.in/',
-    description: 'অসমৰ নিবনুৱা যুৱক-যুৱতীসকলক স্ব-নিয়োজন আৰু ব্যৱসায় স্থাপনৰ বাবে ₹২ লাখৰ পৰা ₹৫ লাখ টকাৰ এককালীন সাহায্য আৰু ঋণ।'
+    description: 'অসমৰ নিবনুৱা যুক-যুৱতীসকলক স্ব-নিয়োজন আৰু ব্যৱসায় স্থাপনৰ বাবে ₹২ লাখৰ পৰা ₹৫ লাখ টকাৰ এককালীন সাহায্য আৰু ঋণ।'
   },
   {
     id: 'ssc-gd-2026',
@@ -90,7 +90,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     department: 'Assam State Rural Livelihoods Mission (ASRLMS)',
     deadline: '2026-11-30',
     applyUrl: 'https://asrlms.assam.gov.in/',
-    description: 'গ্ৰাম্য যুৱক-যুৱতীসকলৰ বাবে সম্পূৰ্ণ বিনামূলীয়া থকা-খোৱাৰ সুবিধা সহ ঔদ্যোগিক দক্ষতা প্ৰশিক্ষণ আৰু ১০০% সংস্থাপন সহায়তা।'
+    description: 'গ্ৰাম্য যুক-যুতীসকলৰ বাবে সম্পূৰ্ণ বিনামূলীয়া থকা-খোৱাৰ সুবিধা সহ ঔদ্যোগিক দক্ষতা প্ৰশিক্ষণ আৰু ০০% সংস্থাপন সহায়তা।'
   },
   {
     id: 'assam-bed-cet-2026',
@@ -100,7 +100,7 @@ const OPPORTUNITIES_DATA: Opportunity[] = [
     department: 'Gauhati & Dibrugarh University',
     deadline: '2026-09-30',
     applyUrl: 'https://dibru.ac.in/',
-    description: 'অসমৰ চৰকাৰী আৰু ব্যক্তিগত শিক্ষক প্ৰশিক্ষণ মহাবিদ্যালয়ত ২ বছৰীয়া বি.এড (B.Ed) নামভৰ্তিৰ বাবে বাচনি পৰীক্ষা।'
+    description: 'অসমৰ চৰকাৰী আৰু ব্যক্তিগত শিক্ষক প্ৰশিক্ষণ মহাবিদ্যালয়ত  বছৰীয়া বি.এড (B.Ed) নামভৰ্তিৰ বাবে বাচনি পৰীক্ষা।'
   },
   {
     id: 'assam-pat-polytechnic-2026',
@@ -225,7 +225,7 @@ export const Opportunities: React.FC = () => {
               
               // FIXED: Using wa.me for Desktop Web compatibility
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-                `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন / আবেদন লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`
+                `📢 *${item.title}*\n বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন / আবেদন লিংক:\n${item.applyUrl}\n\n চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`
               )}`;
 
               return (
@@ -234,12 +234,13 @@ export const Opportunities: React.FC = () => {
                   className="group relative bg-gradient-to-b from-slate-800/60 to-slate-900/80 
                              border border-slate-700/50 rounded-2xl overflow-hidden
                              hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-900/10 
-                             hover:-translate-y-1 transition-all duration-300 ease-out flex flex-col"
+                             hover:-translate-y-1 transition-all duration-300 ease-out 
+                             flex flex-col h-full"
                 >
                   {/* Top accent line on hover */}
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="p-5 space-y-3 flex-1">
+                  <div className="p-5 space-y-3 flex-1 flex flex-col">
                     <div className="flex items-start justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 rounded-md shadow-sm">
                         <CheckCircle2 className="w-3 h-3" />
@@ -256,8 +257,8 @@ export const Opportunities: React.FC = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <h3 className="text-sm sm:text-[15px] font-bold text-white leading-snug group-hover:text-emerald-100 transition-colors">
+                    <div className="mt-2">
+                      <h3 className="text-sm sm:text-[15px] font-bold text-white leading-snug group-hover:text-emerald-100 transition-colors line-clamp-2">
                         {item.title}
                       </h3>
                       <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-2">
@@ -266,13 +267,14 @@ export const Opportunities: React.FC = () => {
                       </p>
                     </div>
 
-                    <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 pt-3 line-clamp-3">
+                    {/* Description with flexible growth to push button down */}
+                    <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 pt-3 mt-auto">
                       {item.description}
                     </p>
                   </div>
 
-                  {/* Dual Action Buttons Bar */}
-                  <div className="p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm">
+                  {/* Dual Action Buttons Bar - Always at bottom */}
+                  <div className="p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2.5 backdrop-blur-sm mt-auto">
                     <a
                       href={item.applyUrl}
                       target="_blank"
@@ -280,7 +282,7 @@ export const Opportunities: React.FC = () => {
                       className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-900/20 transition-all active:scale-[0.98] group/btn"
                     >
                       <span>মূল বিজ্ঞাপন / আবেদন</span>
-                      <ExternalLink className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                      <ArrowUpRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                     </a>
 
                     {/* FIXED: WhatsApp brand color + correct URL + larger size */}
