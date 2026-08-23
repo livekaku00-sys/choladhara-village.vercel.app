@@ -1,11 +1,10 @@
-﻿// 1. Bypass NIC / Government SSL certificate verification
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+﻿process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
-// Load credentials from local .env
+// Auto-load credentials from local .env
 let envUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 let envKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -31,7 +30,6 @@ if (!envUrl || !envKey) {
 
 const supabase = createClient(envUrl, envKey);
 
-// Canonical Root Endpoints for Assam & Central Recruitment
 const VERIFIED_GOVT_BOARDS = [
   {
     org: 'APSC (Assam Public Service Commission)',
@@ -73,21 +71,26 @@ function resolveUrl(href, baseUrl) {
   }
 }
 
+function cleanTitle(raw) {
+  return raw
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/^\s*\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\s*/g, '') // remove leading dates like 26/02/2026
+    .replace(/\b(NEW|new|New)\b/g, '')                            // remove 'new' badges
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function syncVerifiedPortals() {
-  console.log('🏛️ Connecting to Verified Government Root Notice Boards...\n');
+  console.log('🏛️ Scanning Official Boards with Strict Noise Filters...\n');
   let totalInserted = 0;
 
-  // Retrieve existing records to avoid duplicates
   const { data: existingJobs } = await supabase
     .from('opportunities')
     .select('title_en, apply_url');
 
-  const existingTitles = new Set(
-    (existingJobs || []).map(j => (j.title_en || '').toLowerCase().trim())
-  );
-  const existingUrls = new Set(
-    (existingJobs || []).map(j => (j.apply_url || '').trim())
-  );
+  const existingTitles = new Set((existingJobs || []).map(j => (j.title_en || '').toLowerCase().trim()));
+  const existingUrls = new Set((existingJobs || []).map(j => (j.apply_url || '').trim()));
 
   for (const board of VERIFIED_GOVT_BOARDS) {
     try {
@@ -99,51 +102,46 @@ async function syncVerifiedPortals() {
       const res = await fetch(board.url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Cache-Control': 'no-cache'
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         },
         redirect: 'follow',
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        console.warn(`   ⚠️ ${board.org} returned HTTP ${res.status}`);
-        continue;
-      }
+      if (!res.ok) continue;
 
       const html = await res.text();
-
-      // Extract all anchor tags with valid links
       const anchorRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
       let match;
       let boardCount = 0;
 
       while ((match = anchorRegex.exec(html)) !== null) {
         const href = match[1].trim();
-        let rawText = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        const rawText = match[2];
+        const title = cleanTitle(rawText);
 
-        if (!rawText || rawText.length < 12) continue;
+        if (!title || title.length < 15) continue;
 
-        // Recruitment filter matching official terminology
-        const isRecruitment = /recruitment|advertisement|advt|vacancy|vacancies|post of|appointment|walk-in|adre|slrc|grade-iii|grade-iv|grade iii|grade iv|officer|assistant|engineer/i.test(rawText);
-        if (!isRecruitment) continue;
+        // 1. REJECT ADMINISTRATIVE NOISE, RESULTS, AND CANDIDATE LISTS
+        const isJunk = /list of candidate|shortlist|interview|viva-voce|screening test|omr based|omr-based|written exam|postponement|stay order|promotional exam|departmental exam|leave order|cut-off|marks secured|result|answer key|admit card|corrigendum|rejection|syllabus|judges|vol-i|cfo|tender|quotation/i.test(title);
+        if (isJunk) continue;
 
-        // Exclude generic navigation or examination administrative steps
-        if (/admit card|result|answer key|corrigendum|rejection|syllabus|click here|download|view all|archive/i.test(rawText)) continue;
+        // 2. REQUIRE EXPLICIT FRESH HIRING INTENT
+        const isDirectJob = /advertisement|advt|direct recruitment|class iii posts|class iv posts|grade-iii|grade-iv|grade iii|grade iv|vacanc|recruitment to the post|assistant geologist|chemist|drilling engineer|mining engineer|geophysicist|research assistant|veterinary officer|assistant manager/i.test(title);
+        if (!isDirectJob) continue;
 
-        if (existingTitles.has(rawText.toLowerCase())) continue;
+        if (existingTitles.has(title.toLowerCase())) continue;
 
         const applyUrl = resolveUrl(href, board.baseUrl);
         if (existingUrls.has(applyUrl)) continue;
 
         const isCentral = board.tag.includes('Central');
-        const isADRE = /adre|slrc|grade/i.test(rawText) || board.org.includes('ADRE');
+        const isADRE = /adre|slrc|grade/i.test(title) || board.org.includes('ADRE');
 
         const newNotice = {
-          title_en: rawText,
-          title_as: rawText,
+          title_en: title,
+          title_as: title,
           organization: `${board.org} • [${board.tag}]`,
           salary_stipend: isADRE 
             ? 'Pay Band 2 / Pay Band 1 (Assam ROP Rules)' 
@@ -158,8 +156,8 @@ async function syncVerifiedPortals() {
         const { error: insertErr } = await supabase.from('opportunities').insert([newNotice]);
 
         if (!insertErr) {
-          console.log(`   ✅ Queued Official Notice: ${rawText.substring(0, 75)}...`);
-          existingTitles.add(rawText.toLowerCase());
+          console.log(`   ✅ Queued Valid Job Notice: ${title.substring(0, 80)}...`);
+          existingTitles.add(title.toLowerCase());
           existingUrls.add(applyUrl);
           totalInserted++;
           boardCount++;
@@ -167,7 +165,7 @@ async function syncVerifiedPortals() {
       }
 
       if (boardCount === 0) {
-        console.log(`   ℹ️ Connected successfully. No new un-synced notices found.`);
+        console.log(`   ℹ️ No un-synced recruitment notices.`);
       }
 
     } catch (err) {
@@ -175,7 +173,7 @@ async function syncVerifiedPortals() {
     }
   }
 
-  console.log(`\n🎉 Verification Complete! ${totalInserted} authentic notices queued in Supabase.`);
+  console.log(`\n🎉 Sync Complete! ${totalInserted} clean, genuine recruitment notices queued.`);
 }
 
 syncVerifiedPortals();
