@@ -1,251 +1,271 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  Briefcase, 
-  GraduationCap, 
   ExternalLink, 
-  Calendar, 
   Share2, 
-  Sparkles,
-  Award,
-  BookOpen
+  Briefcase, 
+  CheckCircle,
+  Building2,
+  Clock
 } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // Falls back gracefully if supabase client is exported here
 
 interface Opportunity {
   id: string;
-  title_en: string;
-  title_as?: string;
-  organization: string;
-  salary_stipend?: string;
-  apply_url: string;
-  deadline?: string | null;
-  is_approved: boolean;
-  created_at?: string;
+  title: string;
+  category: 'all' | '10th' | '12th' | 'graduate' | 'entrance';
+  categoryBadge: string;
+  department: string;
+  deadline: string;
+  applyUrl: string;
+  description: string;
+  isOfficialGov: boolean;
 }
 
-type FilterCategory = 'all' | '10th' | '12th' | 'graduate' | 'entrance';
+const OPPORTUNITIES_DATA: Opportunity[] = [
+  {
+    id: 'pmegp-2026',
+    title: "Prime Minister's Employment Generation Programme (PMEGP)",
+    category: '10th',
+    categoryBadge: '১০ম উত্তীৰ্ণ / সাধাৰণ (General & 10th+)',
+    department: 'Ministry of MSME / KVIC',
+    deadline: '2026-12-31',
+    applyUrl: 'https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp',
+    description: 'গ্ৰাম্য উদ্যোগ, পশুপালন, আৰু ক্ষুদ্ৰ কাৰখানা স্থাপনৰ বাবে ৩৫% পৰ্যন্ত ৰাজসাহায্য (Subsidy) যুক্ত চৰকাৰী ঋণ আঁচনি।',
+    isOfficialGov: true
+  },
+  {
+    id: 'pm-vishwakarma-2026',
+    title: 'PM Vishwakarma Yojana - Support for Village Artisans & Craftsmen',
+    category: '10th',
+    categoryBadge: 'কাৰিকৰ / সাধাৰণ (Artisans & 8th/10th)',
+    department: 'Ministry of Skill Development & Entrepreneurship',
+    deadline: '2026-12-31',
+    applyUrl: 'https://pmvishwakarma.gov.in/',
+    description: '১৮ বিধ পৰম্পৰাগত কাৰিকৰ (মিস্ত্ৰী, কমাৰ, কুমাৰ, কাঠমিস্ত্ৰী ইত্যাদি)ৰ বাবে বিনামূলীয়া প্ৰশিক্ষণ, ₹১৫,০০০ টুলকিট অনুদান আৰু কম সুতৰ ঋণ।',
+    isOfficialGov: true
+  },
+  {
+    id: 'cmaaa-assam-2026',
+    title: "Chief Minister's Atmanirbhar Asom Abhijan (CMAAA 2.0)",
+    category: '12th',
+    categoryBadge: '১২শ উত্তীৰ্ণ / স্নাতক (12th / Degree)',
+    department: 'Govt. of Assam',
+    deadline: '2026-11-15',
+    applyUrl: 'https://cmaaa.assam.gov.in/',
+    description: 'অসমৰ নিবনুৱা যুৱক-যুৱতীসকলক স্ব-নিয়োজন আৰু ব্যৱসায় স্থাপনৰ বাবে ₹২ লাখৰ পৰা ₹৫ লাখ টকাৰ এককালীন সাহায্য আৰু ঋণ।',
+    isOfficialGov: true
+  },
+  {
+    id: 'ssc-gd-2026',
+    title: 'SSC GD Constable Recruitment (BSF, CISF, CRPF, Assam Rifles)',
+    category: '10th',
+    categoryBadge: '১০ম উত্তীৰ্ণ (10th Pass)',
+    department: 'Staff Selection Commission (SSC)',
+    deadline: '2026-10-14',
+    applyUrl: 'https://ssc.gov.in/',
+    description: 'কেন্দ্ৰীয় অৰ্ধসামৰিক বাহিনী আৰু অসম ৰাইফলছত কনিষ্টবল পদৰ বাবে সৰ্বভাৰতীয় পৰ্যায়ৰ পোনপটীয়া নিযুক্তি।',
+    isOfficialGov: true
+  },
+  {
+    id: 'slprb-assam-police-2026',
+    title: 'Assam Police SLPRB Constable & Sub-Inspector Recruitment',
+    category: '12th',
+    categoryBadge: '১২শ উত্তীৰ্ণ (12th / HS Pass)',
+    department: 'State Level Police Recruitment Board (SLPRB Assam)',
+    deadline: '2026-10-30',
+    applyUrl: 'https://slprbassam.in/',
+    description: 'অসম আৰক্ষীৰ কনিষ্টবল (UB/AB), কমাণ্ডো বেটেলিয়ন আৰু উপ-পৰিদৰ্শক (SI) পদৰ আনুষ্ঠানিক আবেদন পৰ্টেল।',
+    isOfficialGov: true
+  },
+  {
+    id: 'ongc-apprentice-nazira-2026',
+    title: 'ONGC Apprentice Engagement (Nazira & Assam Asset)',
+    category: 'graduate',
+    categoryBadge: 'স্নাতক / ডিপ্লমা / ITI',
+    department: 'Oil and Natural Gas Corporation (ONGC Nazira)',
+    deadline: '2026-10-25',
+    applyUrl: 'https://ongcindia.com/web/eng/career',
+    description: 'নাজিৰা আৰু অসম এছেটৰ বিভিন্ন বিভাগত ১ বছৰীয়া পেছাদাৰী প্ৰশিক্ষণ আৰু মাহেকীয়া ষ্টাইপেণ্ডৰ সুবিধা।',
+    isOfficialGov: true
+  },
+  {
+    id: 'ddugky-skill-assam-2026',
+    title: 'DDU-GKY Free Residential Skill Training & Placement Drive',
+    category: '10th',
+    categoryBadge: '১০ম /১২শ উত্তীৰ্ণ (10th & 12th Pass)',
+    department: 'Assam State Rural Livelihoods Mission (ASRLMS)',
+    deadline: '2026-11-30',
+    applyUrl: 'https://asrlms.assam.gov.in/',
+    description: 'গ্ৰাম্য যুৱক-যুৱতীসকলৰ বাবে সম্পূৰ্ণ বিনামূলীয়া থকা-খোৱাৰ সুবিধা সহ ঔদ্যোগিক দক্ষতা প্ৰশিক্ষণ আৰু ১০০% সংস্থাপন সহায়তা।',
+    isOfficialGov: true
+  },
+  {
+    id: 'assam-bed-cet-2026',
+    title: 'Assam B.Ed Common Entrance Test (GUBEDCET / DUBEDCET)',
+    category: 'entrance',
+    categoryBadge: 'প্ৰৱেশ পৰীক্ষা (Entrance Exam - B.Ed)',
+    department: 'Gauhati & Dibrugarh University',
+    deadline: '2026-09-30',
+    applyUrl: 'https://dibru.ac.in/',
+    description: 'অসমৰ চৰকাৰী আৰু ব্যক্তিগত শিক্ষক প্ৰশিক্ষণ মহাবিদ্যালয়ত ২ বছৰীয়া বি.এড (B.Ed) নামভৰ্তিৰ বাবে বাচনি পৰীক্ষা।',
+    isOfficialGov: true
+  },
+  {
+    id: 'assam-pat-polytechnic-2026',
+    title: 'Assam Polytechnic Admission Test (PAT)',
+    category: 'entrance',
+    categoryBadge: 'প্ৰৱেশ পৰীক্ষা (Polytechnic / Diploma)',
+    department: 'Directorate of Technical Education (DTE Assam)',
+    deadline: '2026-09-15',
+    applyUrl: 'https://dte.assam.gov.in/',
+    description: 'অসমৰ ৰাজ্যিক পলিটেকনিক প্ৰতিষ্ঠানসমূহত ৩ বছৰীয়া ইঞ্জিনিয়াৰিং ডিপ্লমা পাঠ্যক্ৰমত নামভৰ্তিৰ প্ৰৱেশ পৰীক্ষা।',
+    isOfficialGov: true
+  }
+];
 
 export const Opportunities: React.FC = () => {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedFilter, setSelectedFilter] = useState<FilterCategory>('all');
+  const [activeTab, setActiveTab] = useState<'all' | '10th' | '12th' | 'graduate' | 'entrance'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchApprovedOpportunities();
-  }, []);
+  const filteredData = useMemo(() => {
+    return OPPORTUNITIES_DATA.filter(item => {
+      const matchesTab = activeTab === 'all' || item.category === activeTab;
+      const matchesSearch = 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+  }, [activeTab, searchQuery]);
 
-  const fetchApprovedOpportunities = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setOpportunities(data || []);
-    } catch (err) {
-      console.error('Error loading opportunities:', err);
-    } finally {
-      setLoading(false);
-    }
+  const handleShare = (item: Opportunity) => {
+    const shareText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন আৰু আবেদন লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    window.open(whatsappUrl, '_blank');
   };
-
-  // Helper to deduce qualification badge
-  const getBadgeInfo = (item: Opportunity) => {
-    const text = `${item.title_en} ${item.title_as || ''} ${item.organization} ${item.salary_stipend || ''}`.toLowerCase();
-
-    if (/entrance|admission|প্ৰৱেশ|b\.ed|bed cet|gubedcet|dubedcet|neet|jee|cuet|cee|pet|pat|nursing|vet|nda|cet/i.test(text)) {
-      return { label: 'প্ৰৱেশ পৰীক্ষা (Entrance)', color: 'bg-purple-950/60 text-purple-300 border-purple-800/50' };
-    }
-    if (/10th|8th|class iv|grade iv|grade-iv|peon|chowkidar|mts|multi tasking|gds|dak sevak|helper|group d/i.test(text)) {
-      return { label: '৮ম / ১০ম উত্তীৰ্ণ (10th Pass)', color: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/50' };
-    }
-    if (/12th|hslc|hs pass|higher secondary|chsl|constable|forest guard|jail warder|anm|gnm|polytechnic/i.test(text)) {
-      return { label: '১২শ উত্তীৰ্ণ (12th / HS Pass)', color: 'bg-sky-950/60 text-sky-300 border-sky-800/50' };
-    }
-    if (/graduate|degree|class iii|grade iii|grade-iii|sub-inspector|sub inspector|si |junior assistant|lda|cgl|ntpc|research assistant|master/i.test(text)) {
-      return { label: 'স্নাতক / ডিগ্ৰী (Graduate / PG)', color: 'bg-amber-950/60 text-amber-300 border-amber-800/50' };
-    }
-    return { label: 'সাধাৰণ নিযুক্তি (General)', color: 'bg-slate-800 text-slate-300 border-slate-700' };
-  };
-
-  // Filter matching logic
-  const filteredList = opportunities.filter((item) => {
-    const text = `${item.title_en} ${item.title_as || ''} ${item.organization} ${item.salary_stipend || ''}`.toLowerCase();
-
-    // 1. Search Query
-    if (searchQuery.trim() && !text.includes(searchQuery.toLowerCase().trim())) {
-      return false;
-    }
-
-    // 2. Qualification Filter Category
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'entrance') {
-      return /entrance|admission|প্ৰৱেশ|b\.ed|bed cet|gubedcet|dubedcet|neet|jee|cuet|cee|pet|pat|nursing|vet|nda|cet/i.test(text);
-    }
-    if (selectedFilter === '10th') {
-      return /10th|8th|class iv|grade iv|grade-iv|peon|chowkidar|mts|multi tasking|gds|dak sevak|helper|group d/i.test(text);
-    }
-    if (selectedFilter === '12th') {
-      return /12th|hslc|hs pass|higher secondary|chsl|constable|forest guard|jail warder|anm|gnm|polytechnic|nda/i.test(text);
-    }
-    if (selectedFilter === 'graduate') {
-      return /graduate|degree|class iii|grade iii|grade-iii|sub-inspector|sub inspector|si |junior assistant|lda|cgl|ntpc|research assistant|master|pg/i.test(text);
-    }
-    return true;
-  });
-
-  const handleShareWhatsApp = (item: Opportunity) => {
-    const text = `📢 *${item.title_en}*\n🏛️ ${item.organization}\n💼 ${item.salary_stipend || 'Pay as per official norms'}\n🔗 আবেদন লিংক: ${item.apply_url}\n\nচোলাধৰা গ্ৰাম্য তথ্য সেৱা পৰ্টেলৰ পৰা প্ৰাপ্ত`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const filterButtons: { id: FilterCategory; labelAs: string; labelEn: string; icon: React.ReactNode }[] = [
-    { id: 'all', labelAs: 'সকলো সুবিধা', labelEn: 'All Notices', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: '10th', labelAs: '১০ম উত্তীৰ্ণ', labelEn: '10th Pass / Class IV', icon: <BookOpen className="w-3.5 h-3.5" /> },
-    { id: '12th', labelAs: '১২শ উত্তীৰ্ণ (HS)', labelEn: '12th / HS Pass', icon: <Award className="w-3.5 h-3.5" /> },
-    { id: 'graduate', labelAs: 'স্নাতক / ডিগ্ৰী', labelEn: 'Graduate / Degree', icon: <Briefcase className="w-3.5 h-3.5" /> },
-    { id: 'entrance', labelAs: 'প্ৰৱেশ পৰীক্ষা', labelEn: 'Entrance Exams', icon: <GraduationCap className="w-3.5 h-3.5" /> },
-  ];
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       
-      {/* Header Section */}
-      <div className="text-center max-w-3xl mx-auto space-y-3 mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs font-semibold">
+      {/* Header */}
+      <div className="text-center space-y-2 mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
           <Briefcase className="w-3.5 h-3.5" />
-          <span>কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ</span>
+          প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm">
+        <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
           অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
         </p>
       </div>
 
       {/* Search & Filter Bar */}
       <div className="space-y-4 mb-8">
-        
-        {/* Search Field */}
         <div className="relative max-w-xl mx-auto">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="পদৰ নাম, বিভাগ বা পৰীক্ষা বিচাৰক (e.g., ADRE, B.Ed, Constable, NEET)..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+            placeholder="পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm"
           />
         </div>
 
-        {/* Qualification Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          {filterButtons.map((btn) => {
-            const isActive = selectedFilter === btn.id;
-            return (
-              <button
-                key={btn.id}
-                onClick={() => setSelectedFilter(btn.id)}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition border ${
-                  isActive
-                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-950/50'
-                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                {btn.icon}
-                <span>{btn.labelAs}</span>
-                <span className="text-[10px] opacity-75 hidden sm:inline">({btn.labelEn})</span>
-              </button>
-            );
-          })}
+        {/* Tab Filters */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {[
+            { key: 'all', label: 'সকলো সুবিধা (All Notices)' },
+            { key: '10th', label: '১০ম উত্তীৰ্ণ (10th Pass / Class IV)' },
+            { key: '12th', label: '১২শ উত্তীৰ্ণ (12th / HS Pass)' },
+            { key: 'graduate', label: 'স্নাতক / ডিগ্ৰী (Graduate / Degree)' },
+            { key: 'entrance', label: 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)' }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                activeTab === tab.key
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Opportunities Card Grid */}
-      {loading ? (
-        <div className="text-center py-16 space-y-3">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-400 text-xs sm:text-sm">তথ্য সংগ্ৰহ কৰি থকা হৈছে...</p>
-        </div>
-      ) : filteredList.length === 0 ? (
-        <div className="text-center py-14 bg-slate-900/50 rounded-2xl border border-slate-800 p-6 max-w-lg mx-auto space-y-3">
-          <GraduationCap className="w-10 h-10 text-slate-500 mx-auto" />
-          <h3 className="text-base font-semibold text-slate-300">কোনো তথ্য পোৱা নগ’ল</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            আপুনি বিচৰা শাখা বা শব্দৰ কোনো সক্ৰিয় বিজ্ঞাপন বৰ্তমান উপলব্ধ নহয়। ফিল্টাৰ সলনি কৰি পুনৰ চেষ্টা কৰক।
-          </p>
+      {/* Cards Grid */}
+      {filteredData.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+          <p className="text-sm text-slate-500">আপুনি বিচৰা ধৰণৰ কোনো জাননী পোৱা নগ’ল।</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredList.map((item) => {
-            const badge = getBadgeInfo(item);
-            return (
-              <div
-                key={item.id}
-                className="flex flex-col justify-between bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-xl p-5 transition-all shadow-sm hover:shadow-md hover:bg-slate-900"
-              >
-                <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredData.map((item) => (
+            <div 
+              key={item.id}
+              className="bg-white rounded-2xl border border-slate-200 hover:border-emerald-500/50 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+            >
+              <div className="p-5 space-y-3">
+                
+                {/* Badge Row */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                    {item.categoryBadge}
+                  </span>
                   
-                  {/* Category Badge & Deadline */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${badge.color}`}>
-                      {badge.label}
-                    </span>
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      {item.deadline ? item.deadline : 'চৰকাৰী জাননী চাওক'}
-                    </span>
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    <Clock className="w-3 h-3 text-amber-600" />
+                    <span>{item.deadline}</span>
                   </div>
+                </div>
 
-                  {/* Title */}
-                  <h3 className="text-base font-bold text-slate-100 leading-snug line-clamp-2">
-                    {item.title_en}
+                {/* Title & Department */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug hover:text-emerald-600 transition">
+                    {item.title}
                   </h3>
-
-                  {/* Organization */}
-                  <p className="text-xs text-emerald-400 font-medium">
-                    {item.organization}
+                  <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <span>{item.department}</span>
                   </p>
-
-                  {/* Benefits / Pay */}
-                  {item.salary_stipend && (
-                    <div className="bg-slate-950/60 px-3 py-2 rounded-lg border border-slate-800/80 text-xs text-slate-300">
-                      <span className="text-slate-400 font-normal">সুবিধা / পে-স্কেল: </span>
-                      <span className="font-semibold text-slate-200">{item.salary_stipend}</span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Card Action Buttons */}
-                <div className="flex items-center gap-2 pt-5 mt-4 border-t border-slate-800/80">
-                  <a
-                    href={item.apply_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition"
-                  >
-                    <span>মূল বিজ্ঞাপন / আবেদন</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => handleShareWhatsApp(item)}
-                    title="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-emerald-950/70 border border-slate-700 hover:border-emerald-700 text-slate-300 hover:text-emerald-300 transition"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {/* Description */}
+                <p className="text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-2.5">
+                  {item.description}
+                </p>
               </div>
-            );
-          })}
+
+              {/* Action Buttons */}
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
+                <a
+                  href={item.applyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition active:scale-95"
+                >
+                  <span>মূল বিজ্ঞাপন / আবেদন</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleShare(item)}
+                  title="হোৱাটছএপত শ্বেয়াৰ কৰক"
+                  className="inline-flex items-center justify-center p-2 bg-white hover:bg-emerald-50 text-emerald-700 border border-slate-200 hover:border-emerald-300 rounded-lg transition"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
+
+            </div>
+          ))}
         </div>
       )}
 
