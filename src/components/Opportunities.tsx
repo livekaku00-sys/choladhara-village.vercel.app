@@ -128,15 +128,8 @@ export const Opportunities: React.FC = () => {
     });
   }, [activeTab, searchQuery]);
 
-  // Generates universal direct WhatsApp share URL
-  const getWhatsAppShareUrl = (item: Opportunity) => {
-    const shareText = `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন আৰু আবেদন লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`;
-    return `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-  };
-
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* High-contrast container for light or dark modes */}
       <div className="bg-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl">
         
         {/* Header Block */}
@@ -204,63 +197,69 @@ export const Opportunities: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredData.map((item) => (
-              <div 
-                key={item.id}
-                className="bg-slate-900 rounded-2xl border border-slate-800 hover:border-emerald-500/50 shadow-lg transition-all flex flex-col justify-between overflow-hidden"
-              >
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-md">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                      {item.categoryBadge}
-                    </span>
-                    
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
-                      <Clock className="w-3 h-3 text-amber-400" />
-                      <span>{item.deadline}</span>
-                    </div>
-                  </div>
+            {filteredData.map((item) => {
+              const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                `📢 *${item.title}*\n🏢 বিভাগ: ${item.department}\n🎓 অৰ্হতা: ${item.categoryBadge}\n⏳ অন্তিম তাৰিখ: ${item.deadline}\n\n🔗 অফিচিয়েল বিজ্ঞাপন / আবেদন লিংক:\n${item.applyUrl}\n\n🌐 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল: https://choladhara-village.vercel.app`
+              )}`;
 
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                      <span>{item.department}</span>
+              return (
+                <div 
+                  key={item.id}
+                  className="bg-slate-900 rounded-2xl border border-slate-800 hover:border-emerald-500/50 shadow-lg transition-all flex flex-col justify-between overflow-hidden"
+                >
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-md">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        {item.categoryBadge}
+                      </span>
+                      
+                      <div className="flex items-center gap-1 text-[11px] font-medium text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
+                        <Clock className="w-3 h-3 text-amber-400" />
+                        <span>{item.deadline}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                        <span>{item.department}</span>
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-800 pt-2.5">
+                      {item.description}
                     </p>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-800 pt-2.5">
-                    {item.description}
-                  </p>
-                </div>
+                  {/* Dual Action Buttons Bar */}
+                  <div className="p-4 bg-slate-950 border-t border-slate-800/80 flex items-center gap-2.5">
+                    <a
+                      href={item.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-95"
+                    >
+                      <span>মূল বিজ্ঞাপন / আবেদন</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
 
-                {/* Direct Action Links */}
-                <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
-                  <a
-                    href={item.applyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition active:scale-95"
-                  >
-                    <span>মূল বিজ্ঞাপন / আবেদন</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <a
-                    href={getWhatsAppShareUrl(item)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="হোৱাটছএপত শ্বেয়াৰ কৰক"
-                    className="inline-flex items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-lg transition active:scale-95 hover:border-emerald-600"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </a>
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="হোৱাটছএপত জাননীখন শ্বেয়াৰ কৰক"
+                      className="w-11 h-10 flex-shrink-0 inline-flex items-center justify-center bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-700/60 rounded-xl transition active:scale-95 shadow"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </a>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
