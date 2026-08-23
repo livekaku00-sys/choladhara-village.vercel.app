@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
               <span className="text-2xl">🌾</span>
               <div>
                 <h3 className="text-white font-black text-base tracking-tight">
-                  {isAs ? 'চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল' : 'Choladhara Village Portal'}
+                  {isAs ? 'চোলাধৰা গ্ৰাম্য সো প’ৰ্টেল' : 'Choladhara Village Portal'}
                 </h3>
                 <p className="text-[11px] text-emerald-400 font-semibold">
                   {isAs ? 'নাজিৰা / টেঙাপুখুৰী, চৰাইদেউ' : 'Nazira / Tengapukhuri, Charaideo'}
@@ -155,29 +155,29 @@ export const Footer: React.FC = () => {
 
         </div>
 
-        {/* Bottom Bar: Copyright | CENTERED Initiative Badge | Discrete Lock */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        {/* BOTTOM BAR: STRICT 3-COLUMN GRID FOR PERFECT CENTERING */}
+        <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 items-center gap-4 text-xs text-slate-500">
           
           {/* Left: Copyright */}
-          <div className="w-full sm:w-auto text-center sm:text-left order-2 sm:order-1">
+          <div className="text-center sm:text-left order-2 sm:order-1">
             <p>© {new Date().getFullYear()} Choladhara Village Portal. All rights reserved.</p>
           </div>
 
-          {/* Center: Community Initiative Badge */}
-          <div className="w-full sm:w-auto flex items-center justify-center gap-1.5 text-[11px] text-slate-400 order-1 sm:order-2 mb-2 sm:mb-0">
+          {/* Center: Community Initiative Badge (Forced Center) */}
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 order-1 sm:order-2 mb-2 sm:mb-0">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>Community Public Service Initiative</span>
           </div>
 
-          {/* Right: Discrete Lock Symbol ONLY */}
-          <div className="w-full sm:w-auto flex justify-center sm:justify-end order-3">
+          {/* Right: Discrete Lock Symbol */}
+          <div className="flex justify-center sm:justify-end order-3">
             <Link
               to="/admin"
-              className="p-2 rounded-lg text-slate-700 hover:text-slate-500 transition active:scale-90"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-900 transition-all duration-200 active:scale-95 cursor-pointer min-w-[32px] min-h-[32px]"
               title="Admin Login"
               aria-label="Admin Login"
             >
-              <Lock className="w-3.5 h-3.5" />
+              <Lock className="w-4 h-4" />
             </Link>
           </div>
 
