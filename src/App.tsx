@@ -1,4 +1,5 @@
-﻿import React from 'react';
+﻿import { Analytics } from '@vercel/analytics/react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { Home } from './pages/Home';
@@ -24,3 +25,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
