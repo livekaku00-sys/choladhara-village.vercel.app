@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Lock, 
@@ -10,30 +10,80 @@ import {
   Bell, 
   Users, 
   ArrowLeft,
-  RefreshCw
+  RefreshCw,
+  LogOut,
+  Mail,
+  KeyRound
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Notice, SkilledWorker } from '../types/database';
+import type { Session } from '@supabase/supabase-js';
 
 export const Admin: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [pin, setPin] = useState<string>('');
+  const [session, setSession] = useState<Session | null>(null);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  
   const [activeTab, setActiveTab] = useState<'notices' | 'workers'>('notices');
-
   const [notices, setNotices] = useState<Notice[]>([]);
   const [workers, setWorkers] = useState<SkilledWorker[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [dataLoading, setDataLoading] = useState<boolean>(false);
 
+  // New Notice state
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeDesc, setNoticeDesc] = useState('');
   const [noticeCategory, setNoticeCategory] = useState<'urgent' | 'general' | 'jobs' | 'agriculture'>('urgent');
   const [isPinned, setIsPinned] = useState(true);
 
-  const ADMIN_PIN = '785689';
+  // Check Supabase authentication session on mount
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) loadData();
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) loadData();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setAuthLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+      } else if (data.session) {
+        setSession(data.session);
+        setEmail('');
+        setPassword('');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
 
   const loadData = async () => {
-    setLoading(true);
+    setDataLoading(true);
     try {
       const { data: nData } = await supabase
         .from('notices')
@@ -47,20 +97,9 @@ export const Admin: React.FC = () => {
         .order('created_at', { ascending: false });
       if (wData) setWorkers(wData);
     } catch (err) {
-      console.error(err);
+      console.error('Data fetch error:', err);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin === ADMIN_PIN || pin === '1234') {
-      setIsAuthenticated(true);
-      setErrorMsg('');
-      loadData();
-    } else {
-      setErrorMsg('ভুল PIN! অনুগ্ৰহ কৰি সঠিক প্ৰশাসক PIN প্ৰৱেশ কৰক।');
+      setDataLoading(false);
     }
   };
 
@@ -105,7 +144,8 @@ export const Admin: React.FC = () => {
     loadData();
   };
 
-  if (!isAuthenticated) {
+  // Login Screen (Supabase Email & Password)
+  if (!session) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
@@ -113,28 +153,59 @@ export const Admin: React.FC = () => {
             <Lock className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-black text-center mb-1">প্ৰশাসক প্ৰৱেশ (Admin Login)</h2>
-          <p className="text-xs text-slate-400 text-center mb-6">চোলাধৰা গ্ৰাম্য সেৱা পৰ্টেল ব্যৱস্থাপনা কক্ষ</p>
+          <p className="text-xs text-slate-400 text-center mb-6">Supabase Auth • চোলাধৰা গ্ৰাম্য সেৱা পৰ্টেল</p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">প্ৰশাসক সুৰক্ষা PIN:</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-slate-400" />
+                প্ৰশাসক ইমেইল (Admin Email):
+              </label>
               <input
-                type="password"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="PIN দিয়ক (Default: 785689 বা 1234)"
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-lg tracking-widest text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@choladhara.in"
+                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 autoFocus
               />
             </div>
 
-            {errorMsg && <p className="text-rose-400 text-xs text-center font-bold">{errorMsg}</p>}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-slate-400" />
+                পাছৱৰ্ড (Password):
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            {errorMsg && (
+              <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-300 text-xs text-center font-medium">
+                {errorMsg}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow-lg active:scale-95"
+              disabled={authLoading}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white rounded-xl font-bold transition shadow-lg active:scale-95 flex items-center justify-center gap-2"
             >
-              প্ৰৱেশ কৰক (Login)
+              {authLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>প্ৰৱেশ কৰা হৈছে...</span>
+                </>
+              ) : (
+                <span>লগইন কৰক (Sign In)</span>
+              )}
             </button>
           </form>
 
@@ -148,6 +219,7 @@ export const Admin: React.FC = () => {
     );
   }
 
+  // Admin Dashboard (Authenticated)
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -160,7 +232,9 @@ export const Admin: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black">প্ৰশাসক নিয়ন্ত্ৰণ কক্ষ (Admin Dashboard)</h1>
-              <p className="text-xs text-slate-400">চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল</p>
+              <p className="text-xs text-slate-400">
+                Logged in as: <span className="text-emerald-400 font-mono">{session.user.email}</span>
+              </p>
             </div>
           </div>
 
@@ -170,7 +244,7 @@ export const Admin: React.FC = () => {
               className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 text-slate-300 transition"
               title="Refresh Data"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${dataLoading ? 'animate-spin' : ''}`} />
             </button>
             <Link
               to="/"
@@ -179,10 +253,11 @@ export const Admin: React.FC = () => {
               মুকলি ৱেবছাইট
             </Link>
             <button
-              onClick={() => setIsAuthenticated(false)}
-              className="px-4 py-2 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 text-xs font-bold rounded-xl transition"
+              onClick={handleLogout}
+              className="px-4 py-2 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
             >
-              প্ৰস্থান (Logout)
+              <LogOut className="w-3.5 h-3.5" />
+              <span>প্ৰস্থান (Logout)</span>
             </button>
           </div>
         </div>
