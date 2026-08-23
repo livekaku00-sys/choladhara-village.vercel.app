@@ -8,7 +8,8 @@ import {
   X, 
   CheckCircle2,
   Home as HomeIcon,
-  Sprout
+  Sprout,
+  GraduationCap
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -31,6 +32,13 @@ export const Navbar: React.FC = () => {
       label_en: 'Opportunities',
       targetIds: ['sec-opportunities', 'opportunities', 'career'],
       icon: Briefcase
+    },
+    {
+      key: 'scholarships',
+      label_as: 'ছাত্ৰবৃত্তি',
+      label_en: 'Scholarships',
+      targetIds: ['sec-scholarships', 'scholarships', 'scholarship'],
+      icon: GraduationCap
     },
     {
       key: 'artisans',
@@ -102,8 +110,8 @@ export const Navbar: React.FC = () => {
           </div>
         </a>
 
-        {/* Center: Navigation Pill Container (Matches Screenshot) */}
-        <nav className="hidden md:flex items-center gap-6 bg-slate-900/80 px-5 py-2 rounded-2xl border border-slate-800 shadow-inner">
+        {/* Center: Navigation Pill Container */}
+        <nav className="hidden lg:flex items-center gap-5 bg-slate-900/80 px-5 py-2 rounded-2xl border border-slate-800 shadow-inner">
           {navLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -111,7 +119,7 @@ export const Navbar: React.FC = () => {
                 key={link.key}
                 href={`#${link.targetIds[0]}`}
                 onClick={(e) => handleNavClick(e, link.targetIds)}
-                className="flex items-center gap-2 text-xs font-bold text-slate-200 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-2 text-xs font-bold text-slate-200 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
               >
                 <Icon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>{isAs ? link.label_as : link.label_en}</span>
@@ -120,7 +128,7 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Right: Language Toggle Button (Matches Screenshot) */}
+        {/* Right: Language Toggle & Mobile Button */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -132,11 +140,10 @@ export const Navbar: React.FC = () => {
             <span>{language === 'as' ? 'English' : 'অসমীয়া'}</span>
           </button>
 
-          {/* Mobile Drawer Button */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-800 hover:text-white"
+            className="lg:hidden p-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-800 hover:text-white"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -144,9 +151,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#060d17]/98 border-b border-slate-800 px-4 py-3 space-y-2">
+        <div className="lg:hidden bg-[#060d17]/98 border-b border-slate-800 px-4 py-3 space-y-1.5 backdrop-blur-lg animate-fade-in">
           {navLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -154,7 +161,7 @@ export const Navbar: React.FC = () => {
                 key={link.key}
                 href={`#${link.targetIds[0]}`}
                 onClick={(e) => handleNavClick(e, link.targetIds)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 hover:text-emerald-400 transition"
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 hover:text-emerald-400 border border-transparent hover:border-slate-800 transition"
               >
                 <Icon className="w-4 h-4 text-emerald-400" />
                 <span>{isAs ? link.label_as : link.label_en}</span>
