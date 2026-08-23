@@ -1,4 +1,5 @@
-﻿import { Footer } from './components/Footer';
+﻿import { Opportunities } from './components/Opportunities';
+import { Footer } from './components/Footer';
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
@@ -19,4 +20,5 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
 
