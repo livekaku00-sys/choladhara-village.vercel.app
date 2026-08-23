@@ -468,7 +468,7 @@ export const Home: React.FC = () => {
 
         <ClosingSoonBanner />
         <AgricultureSection />
-        <Scholarships />
+        <div id="sec-scholarships"><Scholarships /></div>
         
         
 
@@ -760,11 +760,12 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      <Opportunities />
+      <div id="sec-opportunities"><Opportunities /></div>
 
     </div>
   );
 };
+
 
 
 

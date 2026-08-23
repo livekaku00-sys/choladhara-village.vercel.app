@@ -26,7 +26,7 @@ export const Navbar: React.FC = () => {
     }
     const element = document.querySelector(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -69,10 +69,10 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
+    <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-md border-b border-slate-800 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
-        {/* Brand */}
+        {/* Village Brand */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 group">
           <span className="text-2xl group-hover:scale-110 transition-transform">🌾</span>
           <div>
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1.5 lg:gap-2">
           {navLinks.map((link) => {
             const IconComponent = link.icon;
@@ -98,7 +98,7 @@ export const Navbar: React.FC = () => {
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
               >
                 <IconComponent className={`w-3.5 h-3.5 ${link.color}`} />
                 <span>{isAs ? link.label_as : link.label_en}</span>
@@ -107,7 +107,7 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Language Switcher & Mobile Menu Toggle */}
+        {/* Language Switcher & Mobile Menu Trigger */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLanguage(isAs ? 'en' : 'as')}
@@ -129,7 +129,7 @@ export const Navbar: React.FC = () => {
 
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-slate-950 border-b border-slate-800 px-4 py-4 space-y-2">
           {navLinks.map((link) => {
