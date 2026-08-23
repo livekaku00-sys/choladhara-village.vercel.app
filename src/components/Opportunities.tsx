@@ -7,7 +7,8 @@ import {
   Sparkles,
   Briefcase,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  Filter
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -31,10 +32,52 @@ export interface Opportunity {
   created_at?: string;
 }
 
+type CategoryKey = 'all' | '10th' | '12th' | 'graduate' | 'entrance';
+
+interface FilterTab {
+  key: CategoryKey;
+  label_as: string;
+  label_en: string;
+  keywords: string[];
+}
+
+const FILTER_TABS: FilterTab[] = [
+  {
+    key: 'all',
+    label_as: 'সকলো সুবিধা',
+    label_en: 'All Notices',
+    keywords: []
+  },
+  {
+    key: '10th',
+    label_as: '১০ম উত্তীৰ্ণ / সাধাৰণ',
+    label_en: '10th Pass / IV',
+    keywords: ['10th', '10', '১০ম', 'class iv', 'matric', 'artisan', 'pmegp', 'vishwakarma', 'gd', 'ddugky']
+  },
+  {
+    key: '12th',
+    label_as: '১২শ উত্তীৰ্ণ',
+    label_en: '12th / HS Pass',
+    keywords: ['12th', '12', '১২শ', 'hs', 'higher secondary', 'slprb', 'police', 'cmaaa']
+  },
+  {
+    key: 'graduate',
+    label_as: 'স্নাতক / ডিপ্লমা',
+    label_en: 'Graduate / Degree / ITI',
+    keywords: ['graduate', 'degree', 'স্নাতক', 'diploma', 'iti', 'ongc', 'apprentice', 'b.sc', 'b.a', 'b.com', 'b.tech']
+  },
+  {
+    key: 'entrance',
+    label_as: 'প্ৰৱেশ পৰীক্ষা',
+    label_en: 'Entrance Exams',
+    keywords: ['entrance', 'admission', 'প্ৰৱেশ', 'cet', 'pat', 'b.ed', 'polytechnic', 'neet', 'jee']
+  }
+];
+
 export const Opportunities: React.FC = () => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<'all' | '10th' | '12th' | 'graduate' | 'entrance'>('all');
+  const [activeTab, setActiveTab] = useState<CategoryKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch opportunities dynamically from Supabase
@@ -62,18 +105,60 @@ export const Opportunities: React.FC = () => {
     fetchOpportunities();
   }, []);
 
+  // Helper function to match category
+  const matchesCategory = (item: Opportunity, tabKey: CategoryKey): boolean => {
+    if (tabKey === 'all') return true;
+
+    const tabConfig = FILTER_TABS.find((t) => t.key === tabKey);
+    if (!tabConfig) return true;
+
+    const targetString = [
+      item.category || '',
+      item.category_badge || '',
+      item.categoryBadge || '',
+      item.title_as || '',
+      item.title || '',
+      item.title_en || '',
+      item.description_as || '',
+      item.description || ''
+    ].join(' ').toLowerCase();
+
+    return tabConfig.keywords.some((kw) => targetString.includes(kw.toLowerCase()));
+  };
+
+  // Calculate dynamic counts for each tab
+  const tabCounts = useMemo(() => {
+    const counts: Record<CategoryKey, number> = {
+      all: opportunities.length,
+      '10th': 0,
+      '12th': 0,
+      graduate: 0,
+      entrance: 0
+    };
+
+    opportunities.forEach((item) => {
+      (['10th', '12th', 'graduate', 'entrance'] as CategoryKey[]).forEach((key) => {
+        if (matchesCategory(item, key)) {
+          counts[key] += 1;
+        }
+      });
+    });
+
+    return counts;
+  }, [opportunities]);
+
+  // Filtered opportunities based on active tab and search query
   const filteredData = useMemo(() => {
     return opportunities.filter((item) => {
-      const cat = (item.category || '').toLowerCase();
-      const matchesTab = activeTab === 'all' || cat.includes(activeTab);
+      const matchCategory = matchesCategory(item, activeTab);
 
       const title = (item.title_as || item.title || item.title_en || '').toLowerCase();
       const dept = (item.department_as || item.department || item.department_en || '').toLowerCase();
       const desc = (item.description_as || item.description || item.description_en || '').toLowerCase();
       const query = searchQuery.toLowerCase();
 
-      const matchesSearch = title.includes(query) || dept.includes(query) || desc.includes(query);
-      return matchesTab && matchesSearch;
+      const matchSearch = !query || title.includes(query) || dept.includes(query) || desc.includes(query);
+      return matchCategory && matchSearch;
     });
   }, [opportunities, activeTab, searchQuery]);
 
@@ -113,11 +198,11 @@ export const Opportunities: React.FC = () => {
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
         
-        {/* Glow */}
+        {/* Ambient Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
 
-        {/* Header Block */}
-        <div className="relative text-center space-y-4 mb-12">
+        {/* Section Header */}
+        <div className="relative text-center space-y-4 mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 text-xs font-semibold border border-emerald-800/80 shadow-lg shadow-emerald-900/20">
             <Sparkles className="w-3.5 h-3.5" />
             <span>প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল</span>
@@ -134,13 +219,14 @@ export const Opportunities: React.FC = () => {
               চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী
             </p>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক
+              অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু প্ৰৱেশ পৰীক্ষাৰ আনুষ্ঠানিক লিংক
             </p>
           </div>
         </div>
 
-        {/* Search & Category Filter Tabs */}
-        <div className="relative space-y-5 mb-10">
+        {/* Search Bar & Filter Options */}
+        <div className="relative space-y-6 mb-10">
+          {/* Search Input */}
           <div className="relative max-w-xl mx-auto group">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
             <input
@@ -152,31 +238,40 @@ export const Opportunities: React.FC = () => {
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {[
-              { key: 'all', label: 'সকলো সুবিধা (All Notices)' },
-              { key: '10th', label: '১০ম উত্তীৰ্ণ (10th Pass / Class IV)' },
-              { key: '12th', label: '১২শ উত্তীৰ্ণ (12th / HS Pass)' },
-              { key: 'graduate', label: 'স্নাতক / ডিগ্ৰী (Graduate / Degree)' },
-              { key: 'entrance', label: 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)' }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                  activeTab === tab.key
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/30 border border-emerald-500 scale-[1.02]'
-                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700 hover:border-slate-600'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Filter Option Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {FILTER_TABS.map((tab) => {
+              const isActive = activeTab === tab.key;
+              const count = tabCounts[tab.key] || 0;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 shadow-sm active:scale-95 ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 border border-emerald-400 scale-[1.02]'
+                      : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span>{tab.label_as}</span>
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors ${
+                      isActive
+                        ? 'bg-emerald-950/80 text-emerald-200 border border-emerald-400/40'
+                        : 'bg-slate-950 text-slate-500 border border-slate-800'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Dynamic Database Content */}
+        {/* Dynamic Cards Grid */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
             <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
@@ -185,11 +280,11 @@ export const Opportunities: React.FC = () => {
         ) : filteredData.length === 0 ? (
           <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-dashed border-slate-700 backdrop-blur-sm">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/80 mb-4 shadow-inner">
-              <Search className="w-8 h-8 text-slate-500" />
+              <Filter className="w-8 h-8 text-slate-500" />
             </div>
             <p className="text-base font-semibold text-slate-300 mb-1">কোনো ফলাফল পোৱা নগ’ল</p>
             <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-              আপুনি বিচৰা ধৰণৰ জাননী এতিয়া উপলব্ধ নাই। অনুগ্ৰহ কৰি আন কিৱৰ্ড বা শ্ৰেণী চেষ্টা কৰক।
+              এই শ্ৰেণীত কোনো জাননী উপলব্ধ নাই। অনুগ্ৰহ কৰি আন শ্ৰেণী বা কিৱৰ্ড বাচি লওক।
             </p>
           </div>
         ) : (
