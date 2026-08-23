@@ -1,10 +1,7 @@
 ﻿import { Scholarships } from '../components/Scholarships';
 import { Opportunities } from '../components/Opportunities';
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { 
-  Sprout, 
-  GraduationCap, 
   Wrench, 
   Phone, 
   Bell, 
@@ -17,8 +14,7 @@ import {
   AlertCircle,
     MessageSquare,
   ShieldAlert,
-      FileText,
-  Sparkles,
+      Sparkles,
   ShieldCheck,
   Waves
 } from 'lucide-react';
@@ -69,7 +65,7 @@ const AREA_OPTIONS = [
 ];
 
 export const Home: React.FC = () => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const isAs = language === 'as';
   
   const [workers, setWorkers] = useState<SkilledWorker[]>([]);
@@ -141,13 +137,7 @@ export const Home: React.FC = () => {
     };
   }, []);
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
+  
   const handleRegisterWorker = async (e: React.FormEvent) => {
     e.preventDefault();
     const selectedSkill = SKILL_OPTIONS.find(s => s.value === formData.skill_key);
@@ -238,99 +228,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* 2. Glassmorphic Sticky Header */}
-      <header className="bg-slate-900/90 backdrop-blur-md text-white sticky top-0 z-40 border-b border-slate-800/80 shadow-lg shadow-slate-950/5">
-        <div className="max-w-6xl mx-auto px-4 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3">
-          
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-xl shadow-md shadow-emerald-950/40 group-hover:scale-105 transition">
-              🌾
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-emerald-300 transition">
-                  {t.siteTitle}
-                </h1>
-                <span className="hidden md:inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.2 rounded-md">
-                  Community Portal
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 font-medium line-clamp-1">{t.siteSub}</p>
-            </div>
-          </Link>
-
-          {/* Nav Links & Language Pill */}
-          <nav className="flex items-center gap-1.5 sm:gap-2 flex-wrap" aria-label="Portal Navigation">
-            {notices.length > 0 && (
-              <button 
-                onClick={() => scrollToSection('sec-notifications')}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition animate-pulse"
-              >
-                <Bell className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isAs ? 'জাননী' : 'Notices'}</span>
-                <span className="bg-slate-950 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                  {notices.length}
-                </span>
-              </button>
-            )}
-
-            <button 
-              onClick={() => scrollToSection('sec-agriculture')}
-              className="bg-slate-800/80 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition"
-            >
-              <Sprout className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{isAs ? 'কৃষি হাব' : 'Agri'}</span>
-            </button>
-
-            <button 
-              onClick={() => scrollToSection('sec-scholarships-exams')}
-              className="bg-slate-800/80 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-              <span>{isAs ? 'ছাত্ৰবৃত্তি' : 'Grants'}</span>
-            </button>
-
-            <button 
-              onClick={() => scrollToSection('sec-entrance-exams')}
-              className="bg-slate-800/80 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition"
-            >
-              <FileText className="w-3.5 h-3.5 text-blue-400" />
-              <span>{isAs ? 'পৰীক্ষা' : 'Exams'}</span>
-            </button>
-
-            <button 
-              onClick={() => scrollToSection('sec-jobs-opps')}
-              className="bg-slate-800/80 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition"
-            >
-              <Briefcase className="w-3.5 h-3.5 text-teal-400" />
-              <span>{isAs ? 'নিয়োগ' : 'Jobs'}</span>
-            </button>
-
-            <button 
-              onClick={() => scrollToSection('sec-skilled-workers')}
-              className="bg-slate-800/80 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition"
-            >
-              <Wrench className="w-3.5 h-3.5 text-orange-400" />
-              <span>{isAs ? 'কৰ্মী' : 'Workers'}</span>
-            </button>
-
-            <div className="flex bg-slate-950/90 p-1 rounded-xl border border-slate-800 ml-1 shadow-inner">
-              <button 
-                onClick={() => setLanguage('as')} 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${language === 'as' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                অসমীয়া
-              </button>
-              <button 
-                onClick={() => setLanguage('en')} 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${language === 'en' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                EN
-              </button>
-            </div>
-          </nav>
-
-        </div>
-      </header>
+      
 
       {/* 3. Hero Civic Banner */}
       <section className="relative z-10 pt-8 pb-4 px-4">
@@ -765,6 +663,8 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
+
 
 
 

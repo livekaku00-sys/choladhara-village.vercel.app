@@ -1,31 +1,29 @@
-﻿import { Analytics } from '@vercel/analytics/react';
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+﻿import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider } from './context/LanguageContext';
+import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Admin } from './pages/Admin';
 import { Footer } from './components/Footer';
 
-export const App: React.FC = () => {
+export function App() {
   return (
     <LanguageProvider>
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-          <main className="flex-grow">
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+          <Navbar />
+          <div className="flex-grow">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Admin />} />
             </Routes>
-          </main>
+          </div>
           <Footer />
         </div>
+        <Analytics />
       </BrowserRouter>
-      <Analytics />
-      </LanguageProvider>
+    </LanguageProvider>
   );
-};
+}
 
 export default App;
-
-
-
