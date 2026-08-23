@@ -588,92 +588,7 @@ export const Home: React.FC = () => {
       </main>
 
       {/* 6. Modern Minimalist Footer */}
-      <footer className="bg-slate-950 text-slate-300 pt-12 pb-6 border-t border-slate-800/80 text-xs mt-auto relative z-10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800/80">
-            
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                <Info className="w-4 h-4" />
-                <span>{isAs ? 'প’ৰ্টেলৰ বিষয়ে (About Portal)' : 'About This Portal'}</span>
-              </div>
-              <p className="text-slate-400 leading-relaxed text-xs">
-                {isAs 
-                  ? 'চোলাধৰা গ্ৰাম্য সেৱা আৰু তথ্য প’ৰ্টেল হৈছে স্থানীয় যুৱ স্বেচ্ছাসেৱকসকলৰ দ্বাৰা পৰিচালিত এক স্বতন্ত্ৰ ডিজিটেল তথ্য কেন্দ্ৰ।' 
-                  : 'An independent digital information portal developed and maintained by local youth volunteers of Choladhara.'}
-              </p>
-              <div className="pt-1 flex items-center gap-2 text-slate-400 text-[11px]">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>চোলাধৰা, চৰাইদেউ, অসম - ৭৮৫৬৮৬</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                <ShieldAlert className="w-4 h-4" />
-                <span>{isAs ? 'জৰুৰী যোগাযোগ (Emergency Contacts)' : 'Emergency Directory'}</span>
-              </div>
-              <ul className="space-y-2 text-slate-400">
-                <li className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                  <span>{isAs ? 'এম্বুলেন্স সেৱা (Ambulance):' : 'Ambulance Helpline:'}</span>
-                  <a href="tel:108" className="text-emerald-400 font-bold hover:underline">108</a>
-                </li>
-                <li className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                  <span>{isAs ? 'আৰক্ষী / জৰুৰীকালীন (Police):' : 'Emergency Police:'}</span>
-                  <a href="tel:112" className="text-emerald-400 font-bold hover:underline">112</a>
-                </li>
-                <li className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                  <span>{isAs ? 'চৰাইদেউ জিলা নিয়ন্ত্ৰণ কক্ষ:' : 'District Disaster Control:'}</span>
-                  <a href="tel:1077" className="text-emerald-400 font-bold hover:underline">1077 / 03772-252000</a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
-                <MessageSquare className="w-4 h-4" />
-                <span>{isAs ? 'স্বেচ্ছাসেৱকৰ যোগাযোগ (Help Desk)' : 'Volunteer Contact & Help Desk'}</span>
-              </div>
-              <p className="text-slate-400 text-xs">
-                {isAs 
-                  ? 'তালিকাত তথ্য অন্তৰ্ভুক্ত কৰিবলৈ অথবা যিকোনো ভুল তথ্য শুধৰণিৰ বাবে যোগাযোগ কৰক:' 
-                  : 'For updates, corrections, or publishing public notices, reach out to the volunteer team:'}
-              </p>
-              <div className="space-y-2 pt-1">
-                <a href="mailto:choladhara.village@gmail.com" className="flex items-center gap-2 text-slate-300 hover:text-emerald-400 transition bg-slate-900/60 p-2 rounded-xl border border-slate-800">
-                  <Mail className="w-3.5 h-3.5 text-blue-400" />
-                  <span>choladhara.village@gmail.com</span>
-                </a>
-              </div>
-              <button
-                onClick={() => setIsRemovalModalOpen(true)}
-                className="text-rose-400 hover:text-rose-300 text-[11px] underline pt-1 block"
-              >
-                {isAs ? 'কাৰিকৰ নাম প্ৰত্যাহাৰৰ অনুৰোধ প্ৰপত্ৰ' : 'Worker Name Removal Request Form'}
-              </button>
-            </div>
-
-          </div>
-
-          <div className="pt-6 flex flex-wrap justify-between items-center gap-4 text-[11px] text-slate-500">
-            <div className="flex items-center gap-1">
-              <span>© 2026 চোলাধৰা গ্ৰাম্য সেৱা প’ৰ্টেল।</span>
-              <span className="hidden sm:inline">|</span>
-              <span className="flex items-center gap-1 text-slate-400">
-                {isAs ? 'গাঁৱৰ যুৱসমাজৰ দ্বাৰা নিৰ্মিত' : 'Crafted with'} <Heart className="w-3 h-3 text-red-500 fill-red-500 inline" /> {isAs ? '' : 'by Choladhara Volunteers'}
-              </span>
-            </div>
-
-            <Link 
-              to="/admin" 
-              title="Volunteer Admin Login" 
-              className="text-slate-700 hover:text-emerald-400 p-1.5 rounded-lg transition hover:bg-slate-900"
-            >
-              <Lock className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </footer>
+      
 
       {/* 1. Worker Registration Modal */}
       {isModalOpen && (
@@ -852,5 +767,6 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
 
 

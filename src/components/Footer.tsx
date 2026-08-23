@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
       
-      {/* ১. মূল গ্ৰিড (Main Grid) */}
+      {/* ১. মূল যোগাযোগ আৰু গাঁৱৰ তথ্য */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Phone className="w-4 h-4 text-rose-500" />
-              জৰুৰী যোগাযোগ (Emergency)
+              জৰুৰী যোগাযোগ (Emergency Contacts)
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               <li className="flex items-center justify-between bg-slate-900/80 p-2 rounded-lg border border-slate-800">
@@ -47,11 +47,11 @@ export const Footer: React.FC = () => {
                 <a href="tel:108" className="font-bold text-rose-400 hover:text-rose-300 bg-rose-950/50 px-2 py-0.5 rounded border border-rose-800/40">108</a>
               </li>
               <li className="flex items-center justify-between bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-300">আৰক্ষী / জৰুৰীকালীন:</span>
+                <span className="text-slate-300">আৰক্ষী / জৰুৰীকালীন (Police):</span>
                 <a href="tel:112" className="font-bold text-blue-400 hover:text-blue-300 bg-blue-950/50 px-2 py-0.5 rounded border border-blue-800/40">112</a>
               </li>
               <li className="bg-slate-900/80 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
-                <span className="text-slate-400 text-xs">জিলা নিয়ন্ত্ৰণ কক্ষ:</span>
+                <span className="text-slate-400 text-xs">চৰাইদেউ জিলা নিয়ন্ত্ৰণ কক্ষ:</span>
                 <div className="flex gap-1.5 font-bold text-amber-400 text-xs">
                   <a href="tel:1077" className="hover:underline">1077</a>
                   <span className="text-slate-600">/</span>
@@ -72,18 +72,18 @@ export const Footer: React.FC = () => {
             </p>
             <a 
               href="mailto:choladhara.village@gmail.com" 
-              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2 rounded-lg break-all font-medium transition hover:border-sky-700"
+              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2.5 rounded-lg break-all font-medium transition hover:border-sky-700"
             >
               <Mail className="w-3.5 h-3.5 flex-shrink-0" />
               choladhara.village@gmail.com
             </a>
           </div>
 
-          {/* স্তম্ভ ৪: ১টা বুটাম */}
+          {/* স্তম্ভ ৪: কেৱল ১টা বুটাম */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <UserMinus className="w-4 h-4 text-rose-400" />
-              প্ৰপত্ৰ (Form)
+              প্ৰপত্ৰ (Request Form)
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               প’ৰ্টেলৰ তালিকাৰ পৰা কোনো কাৰিকৰ বা ব্যক্তিৰ নাম আঁতৰাবৰ বাবে অনুৰোধ জনাওক:
@@ -103,11 +103,11 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* ২. গোপনীয়তা নীতি আৰু আইনী অস্বীকৃতি (Legal Disclaimer & Privacy) */}
-      <div className="w-full bg-slate-900/80 border-t border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
+      {/* ২. দ্বৈতভাষিক আইনী অস্বীকৃতি আৰু গোপনীয়তা নীতি (Legal Disclaimer & Privacy Strip) */}
+      <div className="w-full bg-slate-900 border-t border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs sm:text-sm">
               <ShieldAlert className="w-4 h-4 flex-shrink-0" />
               <span>
@@ -143,39 +143,39 @@ export const Footer: React.FC = () => {
 
           {lang === 'as' ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed">
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-sky-400" />
                   ১. অনা-চৰকাৰী সমাজ কল্যাণ সেৱা
                 </span>
                 <p>
-                  এই পৰ্টেলটো সমাজ কল্যাণ আৰু নিযুক্তিৰ তথ্য যোগানৰ এক বিনামূলীয়া তথ্য সেৱা। ই কোনো চৰকাৰী বিভাগ বা আয়োগৰ আনুষ্ঠানিক ৱেবছাইট নহয়।
+                  এই পৰ্টেলটো সমাজ কল্যাণ আৰু যুৱক-যুৱতীসকলক নিযুক্তিৰ তথ্য যোগান ধৰাৰ এক বিনামূলীয়া স্বতন্ত্ৰ ডিজিটেল তথ্য সেৱা। ই কোনো চৰকাৰী বিভাগ বা আয়োগৰ আনুষ্ঠানিক ৱেবছাইট নহয়।
                 </p>
               </div>
 
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   ২. তথ্যৰ উৎস আৰু সতৰ্কতা
                 </span>
                 <p>
-                  সকলো তথ্য চৰকাৰী মূল পৰ্টেল (.gov.in / .nic.in) আৰু ৰাজহুৱা বিজ্ঞাপনৰ পৰা সংগ্ৰহ কৰা হৈছে। প্ৰাৰ্থীয়ে আবেদন কৰাৰ পূৰ্বে মূল জাননী পৰীক্ষা কৰা উচিত।
+                  সকলো তথ্য চৰকাৰী মূল পৰ্টেল (.gov.in / .nic.in) আৰু ৰাজহুৱা বিজ্ঞাপনৰ পৰা সংগ্ৰহ কৰা হৈছে। প্ৰাৰ্থীয়ে আবেদন কৰাৰ পূৰ্বে মূল বিজ্ঞাপন ভালদৰে পৰীক্ষা কৰা উচিত।
                 </p>
               </div>
 
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
                   ৩. কোনো মাচুল বা ধন লোৱা নহয়
                 </span>
                 <p>
-                  এই পৰ্টেলৰ দ্বাৰা কোনো ধৰণৰ অনলাইন মাচুল বা ধন লোৱা নহয়। সকলো আবেদন লিংক মূল চৰকাৰী ৱেবছাইটলৈ প্ৰেৰণ কৰা হয়। কোনো ভুৱা ব্যক্তিক ধন নিদিব।
+                  এই পৰ্টেলৰ দ্বাৰা কোনো ধৰণৰ পঞ্জীয়ন মাচুল বা ধন লোৱা নহয়। সকলো আবেদন লিংক চৰকাৰী ৱেবছাইটলৈ প্ৰেৰণ কৰা হয়। কোনো ভুৱা ব্যক্তিক ধন নিদিব।
                 </p>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed">
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-sky-400" />
                   1. Independent Welfare Initiative
@@ -185,7 +185,7 @@ export const Footer: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   2. Official Sourcing & Fair Use
@@ -195,7 +195,7 @@ export const Footer: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 space-y-1">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-1">
                 <span className="text-slate-200 font-medium flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
                   3. Zero Financial Transactions
