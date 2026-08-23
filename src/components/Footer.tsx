@@ -16,11 +16,11 @@ export const Footer: React.FC = () => {
   return (
     <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800 mt-auto">
       
-      {/* ১. মূল যোগাযোগ আৰু গাঁৱৰ তথ্য */}
+      {/* ১. মূল যোগাযোগ আৰু গাঁৱৰ তথ্য (৪টা স্তম্ভ) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
-          {/* স্তম্ভ ১ */}
+          {/* স্তম্ভ ১: প’ৰ্টেলৰ বিষয়ে */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <span className="w-2 h-4 bg-emerald-500 rounded-full inline-block"></span>
@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* স্তম্ভ ২ */}
+          {/* স্তম্ভ ২: জৰুৰী যোগাযোগ */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Phone className="w-4 h-4 text-rose-500" />
@@ -61,7 +61,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* স্তম্ভ ৩ */}
+          {/* স্তম্ভ ৩: সহায় কেন্দ্ৰ */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <Mail className="w-4 h-4 text-sky-400" />
@@ -72,14 +72,14 @@ export const Footer: React.FC = () => {
             </p>
             <a 
               href="mailto:choladhara.village@gmail.com" 
-              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2.5 rounded-lg break-all font-medium transition hover:border-sky-700"
+              className="inline-flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 bg-sky-950/40 border border-sky-800/40 p-2 rounded-lg break-all font-medium transition hover:border-sky-700"
             >
               <Mail className="w-3.5 h-3.5 flex-shrink-0" />
               choladhara.village@gmail.com
             </a>
           </div>
 
-          {/* স্তম্ভ ৪: কেৱল ১টা বুটাম */}
+          {/* স্তম্ভ ৪: কেৱল ১টা অনুৰোধ বুটাম */}
           <div className="space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
               <UserMinus className="w-4 h-4 text-rose-400" />
