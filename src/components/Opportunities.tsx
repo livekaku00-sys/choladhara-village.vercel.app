@@ -215,24 +215,24 @@ export const Opportunities: React.FC = () => {
         <div className="relative text-center space-y-4 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 text-xs font-semibold border border-emerald-800/80 shadow-lg shadow-emerald-900/20">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{isAs ? 'প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল' : 'Verified Recruitment & Higher Education Portal'}</span>
+            <span>{isAs ? 'প্ৰমাণিত নিযুক্তি আৰু উচ্চ শিক্ষা পৰ্টেল' : 'Verified Employment & Higher Education Portal'}</span>
           </div>
 
           <h2 className="relative text-2xl sm:text-4xl font-extrabold text-white tracking-tight pb-3">
-            {isAs ? 'কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ' : 'Career & Employment Opportunities Hub'}
+            {isAs ? 'কেৰিয়াৰ আৰু নিযুক্তি তথ্য কেন্দ্ৰ' : 'Career & Employment Information Centre'}
             <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent rounded-full opacity-60"></span>
           </h2>
 
           <div className="space-y-1">
             <p className="text-sm sm:text-base font-bold text-emerald-400 flex items-center justify-center gap-2">
               <Briefcase className="w-4 h-4" />
-              {isAs ? 'চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী' : 'Job & Entrance Exam Notifications'}
+              {isAs ? 'চাকৰি আৰু পাঠ্যক্ৰম প্ৰৱেশ পৰীক্ষাৰ জাননী' : 'Jobs & Entrance Examination Notices'}
             </p>
 
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {isAs
                 ? 'অসম আৰু কেন্দ্ৰীয় চৰকাৰৰ শেহতীয়া প্ৰমাণিত জাননী আৰু বি.এড/নিট/পলিটেকনিক প্ৰৱেশৰ সঠিক লিংক'
-                : 'Latest verified Assam & Central Govt notifications with direct links for jobs, training, and exams.'}
+                : 'Latest verified Assam & Central Government notices and official B.Ed/NEET/Polytechnic entrance links'}
             </p>
           </div>
         </div>
@@ -244,18 +244,18 @@ export const Opportunities: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isAs ? 'পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক...' : 'Search designation, department, or scheme name...'}
+              placeholder={isAs ? 'পদবী, বিভাগ বা আঁচনিৰ নাম সন্ধান কৰক...' : 'Search by post, department or scheme name...'}
               className="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-inner transition-all"
             />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2">
             {[
-              { key: 'all', label_as: 'সকলো সুবিধা (All Notices)', label_en: 'All Notices' },
-              { key: '10th', label_as: '১০ম উত্তীৰ্ণ (10th Pass / Class IV)', label_en: '10th Pass / Class IV' },
-              { key: '12th', label_as: '১২শ উত্তীৰ্ণ (12th / HS Pass)', label_en: '12th / HS Pass' },
-              { key: 'graduate', label_as: 'স্নাতক / ডিগ্ৰী (Graduate / Degree)', label_en: 'Graduate / Degree' },
-              { key: 'entrance', label_as: 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)', label_en: 'Entrance Exams' }
+              { key: 'all', label: isAs ? 'সকলো সুবিধা (All Notices)' : 'All Notices' },
+              { key: '10th', label: isAs ? '১০ম উত্তীৰ্ণ (10th Pass / Class IV)' : '10th Pass / Class IV' },
+              { key: '12th', label: isAs ? '১২শ উত্তীৰ্ণ (12th / HS Pass)' : '12th / HS Pass' },
+              { key: 'graduate', label: isAs ? 'স্নাতক / ডিগ্ৰী (Graduate / Degree)' : 'Graduate / Degree' },
+              { key: 'entrance', label: isAs ? 'প্ৰৱেশ পৰীক্ষা (Entrance Exams)' : 'Entrance Exams' }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -267,7 +267,7 @@ export const Opportunities: React.FC = () => {
                     : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700 hover:border-slate-600'
                 }`}
               >
-                {isAs ? tab.label_as : tab.label_en}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -279,12 +279,12 @@ export const Opportunities: React.FC = () => {
               <Search className="w-8 h-8 text-slate-500" />
             </div>
             <p className="text-base font-semibold text-slate-300 mb-1">
-              {isAs ? 'কোনো ফলাফল পোৱা নগ’ল' : 'No Results Found'}
+              {isAs ? 'কোনো ফলাফল পোৱা নগ’ল' : 'No results found'}
             </p>
             <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
               {isAs
                 ? 'আপুনি বিচৰা ধৰণৰ জাননী এতিয়া উপলব্ধ নাই। অনুগ্ৰহ কৰি আন কিৱৰ্ড বা শ্ৰেণী চেষ্টা কৰক।'
-                : 'No notifications found matching your search. Please try another keyword or category.'}
+                : 'No matching notices are currently available. Please try another keyword or category.'}
             </p>
           </div>
         ) : (
