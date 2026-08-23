@@ -173,7 +173,7 @@ export const AgricultureSection: React.FC = () => {
         </button>
       </div>
 
-      {/* 4. Cards Grid */}
+      {/* 4. Dynamic Cards Grid */}
       {loading ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-7 h-7 text-emerald-400 animate-spin" />
@@ -213,7 +213,7 @@ export const AgricultureSection: React.FC = () => {
                     ) : (
                       <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
                         <CheckCircle2 className="w-3 h-3" />
-                        {isAs ? 'সক্ৰিয় সেৱা' : 'Active Scheme'}
+                        {isAs ? 'নিয়মীয়া সেৱা' : 'Year-Round'}
                       </span>
                     )}
                   </div>
@@ -240,7 +240,7 @@ export const AgricultureSection: React.FC = () => {
                     </span>
                   ) : (
                     <span className="text-[10px] text-slate-500">
-                      {isAs ? 'নিয়মীয়া সেৱা' : 'Year-Round Service'}
+                      {isAs ? 'নিয়মীয়া সেৱা' : 'Permanent'}
                     </span>
                   )}
 
