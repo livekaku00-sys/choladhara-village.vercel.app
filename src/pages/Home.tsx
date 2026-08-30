@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, 
   Pin, 
@@ -23,6 +23,7 @@ export const Home: React.FC = () => {
 
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loadingNotices, setLoadingNotices] = useState<boolean>(true);
+  const [noticeError, setNoticeError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotices();
@@ -31,6 +32,7 @@ export const Home: React.FC = () => {
   const fetchNotices = async () => {
     try {
       setLoadingNotices(true);
+      setNoticeError(null);
       const { data, error } = await supabase
         .from('notices')
         .select('*')
@@ -42,7 +44,10 @@ export const Home: React.FC = () => {
         setNotices(data as Notice[]);
       }
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load notices';
       console.error('Error fetching notices:', err);
+      setNoticeError(errorMessage);
     } finally {
       setLoadingNotices(false);
     }
@@ -74,7 +79,25 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {loadingNotices ? (
+        {noticeError ? (
+          <div className="bg-red-950/20 border border-red-800/40 rounded-2xl p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Loader2 className="w-5 h-5 text-red-400" />
+              <p className="text-sm text-red-300 font-medium">
+                {isAs
+                  ? 'জাননী লোড কৰিব নোৱাৰি'
+                  : 'Failed to load notices'}
+              </p>
+            </div>
+            <p className="text-xs text-red-200 mb-4">{noticeError}</p>
+            <button
+              onClick={fetchNotices}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm font-medium transition"
+            >
+              {isAs ? 'পুনৰায় চেষ্টা কৰক' : 'Try Again'}
+            </button>
+          </div>
+        ) : loadingNotices ? (
           <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-10 text-center flex flex-col items-center justify-center gap-2">
             <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
             <p className="text-xs text-slate-400">
@@ -166,4 +189,3 @@ export const Home: React.FC = () => {
 };
 
 export default Home;
-
