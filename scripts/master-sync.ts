@@ -133,85 +133,7 @@ const EXAMS_FEED = [
 ];
 
 // ==========================================
-// 3. JOBS, TRAINING & SELF-EMPLOYMENT FEED
-// ==========================================
-const OPPORTUNITIES_FEED = [
-  {
-    title_en: "SSC GD Constable Recruitment 2026-27 (BSF, CISF, CRPF, Assam Rifles)",
-    title_as: "এছ.এছ.চি জিডি কনিষ্টবল নিযুক্তি (বি.এছ.এফ, চি.আৰ.পি.এফ, অসম ৰাইফলছ)",
-    category: "job",
-    eligibility_en: "10th Standard (Matriculation) pass from a recognized Board.",
-    eligibility_as: "স্বীকৃতিপ্ৰাপ্ত ব’ৰ্ডৰ পৰা মেট্ৰিক (HSLC) উত্তীৰ্ণ নিবনুৱা যুৱক-যুৱতী।",
-    official_link: "https://ssc.gov.in",
-    deadline: "2026-10-14"
-  },
-  {
-    title_en: "Assam Police SLPRB Constable & Sub-Inspector Recruitment",
-    title_as: "অসম আৰক্ষী কনিষ্টবল আৰু উপ-পৰিদৰ্শক (SI) নিযুক্তি বাৰ্তা",
-    category: "job",
-    eligibility_en: "HSLC for Constable / Bachelor Degree for Sub-Inspector (Assam Domicile).",
-    eligibility_as: "কনিষ্টবল পদৰ বাবে মেট্ৰিক আৰু উপ-পৰিদৰ্শক পদৰ বাবে স্নাতক ডিগ্ৰীধাৰী।",
-    official_link: "https://slprbassam.in",
-    deadline: "2026-10-30"
-  },
-  {
-    title_en: "India Post Gramin Dak Sevak (GDS) Engagement (Assam Circle)",
-    title_as: "ভাৰতীয় ডাক বিভাগৰ গ্ৰামীণ ডাক সেৱক (GDS) নিযুক্তি",
-    category: "job",
-    eligibility_en: "10th standard pass with Mathematics and English (Merit based, no exam).",
-    eligibility_as: "গণিত আৰু ইংৰাজীসহ দশম শ্ৰেণী উত্তীৰ্ণ (কোনো লিখিত পৰীক্ষা নহয়, মেধা তালিকাৰ ভিত্তিত)।",
-    official_link: "https://indiapostgdsonline.gov.in",
-    deadline: "2026-09-20"
-  },
-  {
-    title_en: "DDU-GKY Free Residential Skill Training & Placement Drive",
-    title_as: "দীনদয়াল উপাধ্যায় গ্ৰামীণ কৌশল্য যোজনা (DDU-GKY) বিনামূলীয়া কাৰিকৰী প্ৰশিক্ষণ",
-    category: "training",
-    eligibility_en: "Rural youth aged 18-35 (Class 5th to 12th pass) with free food, lodging & placement.",
-    eligibility_as: "১৮-৩৫ বছৰৰ গ্ৰাম্য যুৱক-যুৱতীৰ বাবে থকা-খোৱাৰ সুবিধাসহ বিনামূলীয়া প্ৰশিক্ষণ আৰু চাকৰি।",
-    official_link: "https://ddugky.gov.in",
-    deadline: "2026-11-30"
-  },
-  {
-    title_en: "ONGC Apprentice Engagement (Nazira & Assam Asset)",
-    title_as: "অ'এনজিচি (ONGC) শিক্ষানবিচ (Apprentice) প্ৰশিক্ষণ আঁচনি",
-    category: "training",
-    eligibility_en: "ITI in relevant trade, Diploma in Engineering, or BA/BSc/BCom graduate.",
-    eligibility_as: "আই.টি.আই (ITI), অভিযান্ত্ৰিক ডিপ্লমা অথবা সাধাৰণ স্নাতক উত্তীৰ্ণ প্ৰাৰ্থী।",
-    official_link: "https://ongcindia.com",
-    deadline: "2026-10-25"
-  },
-  {
-    title_en: "Chief Minister's Atmanirbhar Asom Abhijan (CMAAA 2.0)",
-    title_as: "মুখ্যমন্ত্ৰীৰ আত্মনিৰ্ভৰ অসম অভিযান (CMAAA 2.0 স্ব-নিয়োজন অনুদান)",
-    category: "self_employment",
-    eligibility_en: "Financial assistance of ₹2 Lakh to ₹5 Lakh (50% Govt Grant) for unemployed youth.",
-    eligibility_as: "অসমৰ নিবনুৱা যুৱক-যুৱতীসকললৈ ব্যৱসায় আৰু আত্মসংস্থাপনৰ বাবে ২ ৰ পৰা ৫ লাখ টকাৰ সাহাৰ্য (৫০% অনুদান)।",
-    official_link: "https://cmaaa.assam.gov.in",
-    deadline: "2026-11-15"
-  },
-  {
-    title_en: "PM Vishwakarma Yojana - Support for Village Artisans & Craftsmen",
-    title_as: "প্ৰধানমন্ত্ৰী বিশ্বকৰ্মা যোজনা (গাঁৱৰ কাৰিকৰ আৰু শিল্পীসকলৰ বাবে)",
-    category: "self_employment",
-    eligibility_en: "₹15,000 toolkits e-voucher + ₹3 Lakh collateral-free loan at 5% interest for 18 trades.",
-    eligibility_as: "কাঠমিস্ত্ৰী, ৰাজমিস্ত্ৰী, দৰ্জী, কমাৰ আদি কাৰিকৰলৈ ১৫,০০০ টকাৰ টোলকীট আৰু ৫% সুতত ঋণ।",
-    official_link: "https://pmvishwakarma.gov.in",
-    deadline: "2026-12-31"
-  },
-  {
-    title_en: "Prime Minister's Employment Generation Programme (PMEGP)",
-    title_as: "প্ৰধানমন্ত্ৰী ৰোজগাৰ সৃষ্টি কাৰ্যসূচী (PMEGP ৩৫% ৰাজসাহায্য)",
-    category: "self_employment",
-    eligibility_en: "Up to 35% government subsidy on bank loans for setting up micro-enterprises & manufacturing.",
-    eligibility_as: "নতুন ক্ষুদ্ৰ উদ্যোগ, পাম বা ব্যৱসায় আৰম্ভ কৰিবলৈ বেংক ঋণৰ ওপৰত সৰ্বোচ্চ ৩৫% চৰকাৰী ৰাজসাহায্য।",
-    official_link: "https://www.kviconline.gov.in",
-    deadline: "2026-12-31"
-  }
-];
-
-// ==========================================
-// 4. AGRICULTURE & FARMERS FEED
+// 3. AGRICULTURE & FARMERS FEED
 // ==========================================
 const AGRI_FEED = [
   {
@@ -316,7 +238,6 @@ async function masterAutonomousSync() {
   console.log('🧹 [1/4 Auto-Wipe]: Purging expired listings across tables...');
   await supabase.from('scholarships').delete().lt('deadline', todayIso);
   await supabase.from('entrance_exams').delete().lt('deadline', todayIso);
-  await supabase.from('opportunities').delete().lt('deadline', todayIso);
   console.log('✅ Expired programs wiped clean.');
 
   // 2. SCHOLARSHIPS
@@ -340,8 +261,8 @@ async function masterAutonomousSync() {
     }
   }
 
-  // 3. EXAMS & JOBS / SELF-EMPLOYMENT
-  console.log('\n📝 [3/4 Exams & Jobs]: Syncing & Auto-Publishing...');
+  // 3. EXAMS
+  console.log('\n📝 [3/4 Exams]: Syncing & Auto-Publishing...');
   for (const e of EXAMS_FEED) {
     if (e.deadline >= todayIso) {
       const { data: existing } = await supabase
@@ -357,26 +278,6 @@ async function masterAutonomousSync() {
           source_type: 'automated_public_feed'
         }]);
         console.log(`  🌟 [Exam Added]: ${e.exam_name_en}`);
-      }
-    }
-  }
-
-  for (const j of OPPORTUNITIES_FEED) {
-    if (j.deadline >= todayIso) {
-      const { data: existing } = await supabase
-        .from('opportunities')
-        .select('id')
-        .eq('title_en', j.title_en)
-        .maybeSingle();
-
-      if (!existing) {
-        await supabase.from('opportunities').insert([{
-          title: j.title_en,
-          ...j,
-          is_approved: true,
-          created_at: new Date().toISOString()
-        }]);
-        console.log(`  🌟 [Opportunity Added]: ${j.title_en}`);
       }
     }
   }

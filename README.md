@@ -1,32 +1,33 @@
-# React + TypeScript + Vite
+# Choladhara Village Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Bilingual (Assamese / English) village portal: notices, weather and farm advisories,
+jobs and entrance exams, scholarships, and a skilled-workers directory. Built with
+React + Vite + Tailwind, backed by Supabase, deployed on Vercel.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env   # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Other scripts: `npm run build`, `npm run type-check`, `npm run test`.
+
+## Database setup (Supabase SQL Editor)
+
+Run these in order:
+
+1. `sql/schema.sql`
+2. `sql/entrance_exams_schema.sql`
+3. `sql/admin_security.sql` — admin-only write policies
+
+Then give your account admin access:
+
+```sql
+INSERT INTO public.admins (user_id)
+SELECT id FROM auth.users WHERE email = 'you@example.com';
+```
+
+Only users listed in `public.admins` can edit data or use `/admin`. Signed-in users
+who are not in that table get read access only, like everyone else.
