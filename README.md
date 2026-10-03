@@ -31,8 +31,3 @@ SELECT id FROM auth.users WHERE email = 'you@example.com';
 
 Only users listed in `public.admins` can edit data or use `/admin`. Signed-in users
 who are not in that table get read access only, like everyone else.
-
-## Scheduled jobs
-
-`.github/workflows/daily-job-sync.yml` runs `scripts/auto-fetch-jobs.mjs` every 48 hours.
-It needs the `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` repository secrets.
