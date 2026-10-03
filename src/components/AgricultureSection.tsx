@@ -8,7 +8,8 @@ import {
   ShieldCheck, 
   TrendingUp,
   Clock,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
@@ -33,12 +34,27 @@ interface AgriService {
   is_active?: boolean;
 }
 
+// Paddy (common) MSP for the current Kharif Marketing Season — update each year after the
+// Cabinet announcement (KMS 2026-27 approved May 2026).
+const PADDY_MSP = { seasonEn: '2026-27', seasonAs: '২০২৬-২৭', en: '₹2,441', as: '₹২,৪৪১' };
+
+// Today's date as YYYY-MM-DD in the visitor's timezone (toISOString would give the UTC date)
+const localDateString = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const daysLeftLabel = (days: number, isAs: boolean) => {
+  if (days <= 0) return isAs ? 'আজি শেষ দিন' : 'Last day today';
+  if (isAs) return `${days} দিন বাকী`;
+  return days === 1 ? '1 day left' : `${days} days left`;
+};
+
 export const AgricultureSection: React.FC = () => {
   const { language } = useLanguage();
   const isAs = language === 'as';
   const [activeTab, setActiveTab] = useState<string>('all');
   const [services, setServices] = useState<AgriService[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
 
   useEffect(() => {
     fetchAgriServices();
@@ -47,7 +63,8 @@ export const AgricultureSection: React.FC = () => {
   const fetchAgriServices = async () => {
     try {
       setLoading(true);
-      const today = new Date().toISOString().split('T')[0];
+      setLoadError(false);
+      const today = localDateString(new Date());
 
       const { data, error } = await supabase
         .from('agriculture_services')
@@ -62,13 +79,15 @@ export const AgricultureSection: React.FC = () => {
       }
     } catch (err) {
       console.error('Error loading agriculture services:', err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
   };
 
   const getRemainingDays = (validUntil: string) => {
-    const target = new Date(validUntil);
+    // "YYYY-MM-DD" alone is parsed as UTC; add a time so it is read as a local date
+    const target = new Date(`${validUntil}T00:00`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diffTime = target.getTime() - today.getTime();
@@ -80,7 +99,7 @@ export const AgricultureSection: React.FC = () => {
     : services.filter(s => s.category === activeTab);
 
   return (
-    <section id="sec-agriculture" className="space-y-6">
+    <section className="space-y-6">
       {/* 1. Header & Live MSP Rate */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -100,7 +119,9 @@ export const AgricultureSection: React.FC = () => {
         <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-700/60 px-3.5 py-2 rounded-xl text-emerald-300 self-start md:self-auto shadow-sm">
           <TrendingUp className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <span className="text-xs font-bold tracking-tight">
-            {isAs ? 'ধানৰ চৰকাৰী MSP: ₹২,৩০০/কুইণ্টল' : 'Paddy Govt MSP: ₹2,300/Quintal'}
+            {isAs
+              ? `ধানৰ চৰকাৰী MSP (${PADDY_MSP.seasonAs}): ${PADDY_MSP.as}/কুইণ্টল`
+              : `Paddy Govt MSP (${PADDY_MSP.seasonEn}): ${PADDY_MSP.en}/Quintal`}
           </span>
         </div>
       </div>
@@ -184,6 +205,22 @@ export const AgricultureSection: React.FC = () => {
             {isAs ? 'কৃষি সেৱাসমূহ লোড কৰা হৈছে...' : 'Loading agricultural services...'}
           </p>
         </div>
+      ) : loadError ? (
+        <div className="bg-slate-900/40 border border-red-900/60 rounded-2xl p-8 text-center flex flex-col items-center gap-3">
+          <AlertCircle className="w-6 h-6 text-red-400" />
+          <p className="text-xs text-slate-300">
+            {isAs
+              ? 'কৃষি সেৱাসমূহ লোড কৰিব পৰা নগ’ল। ইণ্টাৰনেট সংযোগ পৰীক্ষা কৰি পুনৰ চেষ্টা কৰক।'
+              : 'Could not load agricultural services. Please check your connection and try again.'}
+          </p>
+          <button
+            onClick={fetchAgriServices}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            {isAs ? 'পুনৰ চেষ্টা কৰক' : 'Try Again'}
+          </button>
+        </div>
       ) : filteredServices.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-8 text-center text-slate-400 text-xs">
           {isAs ? 'এই শ্ৰেণীত কোনো সক্ৰিয় আঁচনি উপলব্ধ নাই।' : 'No active schemes available under this category.'}
@@ -211,7 +248,7 @@ export const AgricultureSection: React.FC = () => {
                           : 'bg-amber-950/60 text-amber-300 border-amber-800'
                       }`}>
                         <Clock className="w-3 h-3" />
-                        <span>{daysRemaining} {isAs ? 'দিন বাকী' : 'days left'}</span>
+                        <span>{daysLeftLabel(daysRemaining, isAs)}</span>
                       </span>
                     ) : (
                       <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
@@ -284,7 +321,7 @@ export const AgricultureSection: React.FC = () => {
           className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md self-start sm:self-auto"
         >
           <PhoneCall className="w-3.5 h-3.5" />
-          <span>1800-180-1551 (টোল-ফ্ৰী)</span>
+          <span>1800-180-1551 {isAs ? '(টোল-ফ্ৰী)' : '(Toll-free)'}</span>
         </a>
       </div>
     </section>
