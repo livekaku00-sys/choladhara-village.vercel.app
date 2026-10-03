@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { daysLeftLabel, daysUntil, localDateString } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 
 interface AgriService {
@@ -37,16 +38,6 @@ interface AgriService {
 // Paddy (common) MSP for the current Kharif Marketing Season — update each year after the
 // Cabinet announcement (KMS 2026-27 approved May 2026).
 const PADDY_MSP = { seasonEn: '2026-27', seasonAs: '২০২৬-২৭', en: '₹2,441', as: '₹২,৪৪১' };
-
-// Today's date as YYYY-MM-DD in the visitor's timezone (toISOString would give the UTC date)
-const localDateString = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-const daysLeftLabel = (days: number, isAs: boolean) => {
-  if (days <= 0) return isAs ? 'আজি শেষ দিন' : 'Last day today';
-  if (isAs) return `${days} দিন বাকী`;
-  return days === 1 ? '1 day left' : `${days} days left`;
-};
 
 export const AgricultureSection: React.FC = () => {
   const { language } = useLanguage();
@@ -85,14 +76,7 @@ export const AgricultureSection: React.FC = () => {
     }
   };
 
-  const getRemainingDays = (validUntil: string) => {
-    // "YYYY-MM-DD" alone is parsed as UTC; add a time so it is read as a local date
-    const target = new Date(`${validUntil}T00:00`);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffTime = target.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+
 
   const filteredServices = activeTab === 'all' 
     ? services 
@@ -228,7 +212,7 @@ export const AgricultureSection: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredServices.map((service) => {
-            const daysRemaining = service.valid_until ? getRemainingDays(service.valid_until) : null;
+            const daysRemaining = service.valid_until ? daysUntil(service.valid_until) : null;
 
             return (
               <div

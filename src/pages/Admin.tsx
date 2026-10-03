@@ -857,7 +857,7 @@ export const Admin: React.FC = () => {
                           {s.is_approved ? 'অনুমোদিত' : 'লুকুওৱা (Hidden)'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">{item.provider || 'Govt'} {item.amount ? `• ${item.amount}` : ''} • শেষ তাৰিখ: {s.deadline}</p>
+                      <p className="text-[11px] text-slate-400 mt-1">{item.provider || 'Govt'} {(item.benefit_amount || item.amount) ? `• ${item.benefit_amount || item.amount}` : ''} • শেষ তাৰিখ: {s.deadline}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
