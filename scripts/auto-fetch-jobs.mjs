@@ -33,15 +33,39 @@ if (!envUrl || !envKey) {
   process.exit(1);
 }
 
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // With the anon key, RLS hides unapproved rows, so the duplicate check below
+  // cannot see notices queued on earlier runs. The unique index from
+  // sql/opportunities_dedupe.sql still blocks duplicates at the database level.
+  console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set — falling back to the anon key.');
+  console.warn('   Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY as GitHub repository secrets.\n');
+}
+
 const supabase = createClient(envUrl, envKey);
 
 // 3. Noise Filter (Block Non-Job Content)
 const IGNORE_KEYWORDS = [
   'result', 'marksheet', 'mark sheet', 'answer key', 'omr sheet',
   'interview schedule', 'viva-voce', 'rejection list', 'rejected candidates',
-  'admit card', 'call letter', 'cancellation notice', 'corrigendum regarding exam',
+  'admit card', 'download admit', 'call letter', 'cancellation notice', 'corrigendum regarding exam',
+  'postpone', 'syllabus', 'exam schedule', 'date of exam', 'written test', 'physical test',
+  'merit list', 'select list', 'selected candidates', 'provisional list', 'document verification',
   'departmental exam', 'promotional exam', 'tender', 'quotation', 'auction', 'nit no'
 ];
+
+// Job-related words, matched as whole words so e.g. "post" does not match "postponement"
+const RECRUITMENT_PATTERN = /\b(recruitment|advertisement|advt|posts?|vacanc(y|ies)|grade)\b/i;
+
+// Normalise URLs so the same notice is not stored twice with tiny differences
+function normalizeUrl(url) {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    return u.href.replace(/\/$/, '');
+  } catch (e) {
+    return url.trim();
+  }
+}
 
 // 4. Strict Expiry & Date Extraction
 function extractAndValidateDeadline(text, fullContent = '') {
@@ -132,8 +156,11 @@ async function syncVerifiedPortals() {
     .from('opportunities')
     .select('title_en, official_application_url, apply_url');
 
-  const existingTitles = new Set((existingJobs || []).map(j => (j.title_en || '').toLowerCase().trim()));
-  const existingUrls = new Set((existingJobs || []).map(j => (j.official_application_url || j.apply_url || '').trim()));
+  // Dedupe by link only: many boards reuse generic titles like "Recruitment Notice"
+  // for different notices, so matching on title would drop real new jobs.
+  const existingUrls = new Set(
+    (existingJobs || []).map(j => normalizeUrl(j.official_application_url || j.apply_url || '')).filter(Boolean)
+  );
 
   for (const board of VERIFIED_GOVT_BOARDS) {
     console.log(`📡 Scanning: ${board.name}`);
@@ -178,14 +205,7 @@ async function syncVerifiedPortals() {
         }
 
         // 2. Recruitment keyword requirement
-        const isRecruitment = lowerText.includes('recruitment') || 
-                              lowerText.includes('advertisement') || 
-                              lowerText.includes('advt') || 
-                              lowerText.includes('post') || 
-                              lowerText.includes('vacancy') ||
-                              lowerText.includes('grade');
-
-        if (!isRecruitment) continue;
+        if (!RECRUITMENT_PATTERN.test(rawText)) continue;
 
         // Resolve absolute URL
         let applyUrl = rawHref;
@@ -196,6 +216,7 @@ async function syncVerifiedPortals() {
             continue;
           }
         }
+        applyUrl = normalizeUrl(applyUrl);
 
         // 3. Expiry & Date Verification
         const deadlineValidation = extractAndValidateDeadline(rawText, rawHref);
@@ -206,13 +227,14 @@ async function syncVerifiedPortals() {
         }
 
         // 4. Duplicate Check
-        if (existingTitles.has(lowerText) || existingUrls.has(applyUrl)) {
+        if (existingUrls.has(applyUrl)) {
           continue;
         }
 
         // 5. Insert Valid Record into Supabase
         const newNotice = {
-          title_en: rawText.substring(0, 240),
+          // Short link texts like "Recruitment Notice" get the board name so admins can tell them apart
+          title_en: (rawText.length < 40 ? `${board.organization}: ${rawText}` : rawText).substring(0, 240),
           title_as: `${board.organization_as}: ${rawText.substring(0, 180)}`,
           organization: board.organization,
           category: board.category,
@@ -228,9 +250,17 @@ async function syncVerifiedPortals() {
 
         const { error: insertErr } = await supabase.from('opportunities').insert([newNotice]);
 
+        if (insertErr?.code === '23505') {
+          // Unique index on the link: already queued on an earlier run
+          existingUrls.add(applyUrl);
+          continue;
+        }
+        if (insertErr) {
+          console.log(`   ❌ Insert failed for "${rawText.substring(0, 50)}...": ${insertErr.message}`);
+        }
+
         if (!insertErr) {
           console.log(`   ✅ Queued Active Job Notice: ${rawText.substring(0, 60)}... [Deadline: ${deadlineValidation.date}]`);
-          existingTitles.add(lowerText);
           existingUrls.add(applyUrl);
           totalInserted++;
           boardCount++;
