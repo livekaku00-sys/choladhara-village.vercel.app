@@ -21,6 +21,7 @@ Run these in order:
 1. `sql/schema.sql`
 2. `sql/entrance_exams_schema.sql`
 3. `sql/admin_security.sql` — admin-only write policies
+4. `sql/removal_requests_public_insert.sql` — lets visitors send worker removal requests
 
 Then give your account admin access:
 
