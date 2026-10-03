@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { phoneDigits } from '../lib/phone';
+import { daysUntil } from '../lib/dates';
 import type { SkilledWorker, Notice, Scholarship, EntranceExam, Opportunity } from '../types/database';
 
 interface RemovalRequest {
@@ -88,60 +89,84 @@ export const Admin: React.FC = () => {
 
     supabase.auth.getSession().then(({ data: { session } }) => handleSession(session));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // getSession() above already handles the initial session, and hourly token
+      // refreshes don't change who is logged in, so skip those to avoid reloading everything
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
       handleSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchAllData = async () => {
+  // keepStatus: refresh quietly after an action so its result message stays visible
+  const fetchAllData = async (keepStatus = false) => {
     setRefreshing(true);
-    setStatusMsg('তথ্য সংগ্ৰহ কৰা হৈছে (Fetching all records)...');
+    if (!keepStatus) setStatusMsg('তথ্য সংগ্ৰহ কৰা হৈছে (Fetching all records)...');
     try {
-      // Fetch each table independently with simple select('*') to prevent column errors
+      // Fetch each table independently, newest first (ids increase with each insert)
+      const load = (table: string) => supabase.from(table).select('*').order('id', { ascending: false });
       const [wRes, rRes, jRes, eRes, sRes, nRes] = await Promise.all([
-        supabase.from('skilled_workers').select('*'),
-        supabase.from('worker_removal_requests').select('*'),
-        supabase.from('opportunities').select('*'),
-        supabase.from('entrance_exams').select('*'),
-        supabase.from('scholarships').select('*'),
-        supabase.from('notices').select('*')
+        load('skilled_workers'),
+        load('worker_removal_requests'),
+        load('opportunities'),
+        load('entrance_exams'),
+        load('scholarships'),
+        load('notices')
       ]);
 
-      if (wRes.data) {
-        const sorted = [...wRes.data].reverse();
-        setWorkers(sorted as SkilledWorker[]);
-      }
-      if (rRes.data) {
-        const sorted = [...rRes.data].reverse();
-        setRemovalRequests(sorted as RemovalRequest[]);
-      }
-      if (jRes.data) {
-        const sorted = [...jRes.data].reverse();
-        setJobs(sorted as Opportunity[]);
-      }
-      if (eRes.data) {
-        const sorted = [...eRes.data].reverse();
-        setExams(sorted as EntranceExam[]);
-      }
-      if (sRes.data) {
-        const sorted = [...sRes.data].reverse();
-        setScholarships(sorted as Scholarship[]);
-      }
-      if (nRes.data) {
-        const sorted = [...nRes.data].reverse();
-        setNotices(sorted as Notice[]);
+      if (wRes.data) setWorkers(wRes.data as SkilledWorker[]);
+      if (rRes.data) setRemovalRequests(rRes.data as RemovalRequest[]);
+      if (jRes.data) setJobs(jRes.data as Opportunity[]);
+      if (eRes.data) setExams(eRes.data as EntranceExam[]);
+      if (sRes.data) setScholarships(sRes.data as Scholarship[]);
+      if (nRes.data) setNotices(nRes.data as Notice[]);
+
+      // Supabase returns errors instead of throwing, so check each table
+      const failed = ([
+        ['কাৰিকৰ (workers)', wRes],
+        ['প্ৰত্যাহাৰ অনুৰোধ (removals)', rRes],
+        ['নিয়োগ (jobs)', jRes],
+        ['প্ৰৱেশ পৰীক্ষা (exams)', eRes],
+        ['ছাত্ৰবৃত্তি (scholarships)', sRes],
+        ['জাননী (notices)', nRes]
+      ] as const).filter(([, res]) => res.error);
+      if (failed.length > 0) {
+        failed.forEach(([name, res]) => console.error(`Error loading ${name}:`, res.error));
+        setStatusMsg(`⚠️ লোড কৰিব পৰা নগ’ল (Failed to load): ${failed.map(([name]) => name).join(', ')}`);
+        return;
       }
 
-      setStatusMsg('✅ সকলো তথ্য সফলতাৰে লোড হ’ল (Sync Complete)!');
-      setTimeout(() => setStatusMsg(null), 3000);
+      if (!keepStatus) {
+        setStatusMsg('✅ সকলো তথ্য সফলতাৰে লোড হ’ল (Sync Complete)!');
+        setTimeout(() => setStatusMsg(null), 3000);
+      }
     } catch (err: any) {
       console.error('Error fetching admin data:', err);
       setStatusMsg(`ত্রুটি: ${err.message || 'Error connecting to database'}`);
     } finally {
       setRefreshing(false);
     }
+  };
+
+  // Run an update/delete and confirm a row actually changed. Row-level security doesn't
+  // return an error when it blocks a change — it just changes nothing — so check the rows.
+  const runChange = async (
+    query: PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+    successMsg: string
+  ): Promise<boolean> => {
+    const { data, error } = await query;
+    if (error) {
+      setStatusMsg(`❌ ত্রুটি (Error): ${error.message}`);
+      return false;
+    }
+    if (!data || data.length === 0) {
+      setStatusMsg('⚠️ একো সলনি নহ’ল — এই একাউণ্টৰ অনুমতি নাই বা তথ্য ইতিমধ্যে আঁতৰোৱা হৈছে (Nothing changed — no permission or already removed)');
+      return false;
+    }
+    setStatusMsg(successMsg);
+    fetchAllData(true);
+    return true;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -160,20 +185,18 @@ export const Admin: React.FC = () => {
   // --- Worker Actions ---
   const handleToggleWorkerStatus = async (id: string | number, currentVerified: boolean) => {
     const nextStatus = !currentVerified;
-    const { error } = await supabase.from('skilled_workers').update({ is_verified: nextStatus }).eq('id', id);
-    if (!error) {
-      setStatusMsg(nextStatus ? '✅ কাৰিকৰৰ নাম অনুমোদন কৰা হ’ল (Approved)' : '⚠️ কাৰিকৰৰ নাম স্থগিত কৰা হ’ল (Pending)');
-      fetchAllData();
-    } else {
-      alert(`Error: ${error.message}`);
-    }
+    await runChange(
+      supabase.from('skilled_workers').update({ is_verified: nextStatus }).eq('id', id).select('id'),
+      nextStatus ? '✅ কাৰিকৰৰ নাম অনুমোদন কৰা হ’ল (Approved)' : '⚠️ কাৰিকৰৰ নাম স্থগিত কৰা হ’ল (Pending)'
+    );
   };
 
   const handleDeleteWorker = async (id: string | number) => {
     if (window.confirm('নিশ্চিতনে এই কাৰিকৰৰ নাম সম্পূৰ্ণৰূপে মচি পেলাব? (Permanently remove worker?)')) {
-      const { error } = await supabase.from('skilled_workers').delete().eq('id', id);
-      if (!error) fetchAllData();
-      else alert(`Delete error: ${error.message}`);
+      await runChange(
+        supabase.from('skilled_workers').delete().eq('id', id).select('id'),
+        '🗑️ কাৰিকৰৰ নাম মচা হ’ল (Worker removed)'
+      );
     }
   };
 
@@ -187,108 +210,104 @@ export const Admin: React.FC = () => {
         setStatusMsg(`⚠️ ${req.phone_number} নম্বৰৰ কোনো কাৰিকৰ পোৱা নগ’ল (No worker with this number). অনুৰোধটো নাকচ কৰিব পাৰে।`);
         return;
       }
-      const { error } = await supabase.from('skilled_workers').delete().in('id', ids);
-      if (error) {
-        setStatusMsg(`ত্রুটি: ${error.message}`);
-        return;
+      const removed = await runChange(
+        supabase.from('skilled_workers').delete().in('id', ids).select('id'),
+        `✅ ${req.worker_name}-ৰ নাম সফলতাৰে আঁতৰোৱা হ’ল!`
+      );
+      if (removed) {
+        await supabase.from('worker_removal_requests').delete().eq('id', req.id);
+        fetchAllData(true);
       }
-      await supabase.from('worker_removal_requests').delete().eq('id', req.id);
-      setStatusMsg(`✅ ${req.worker_name}-ৰ নাম সফলতাৰে আঁতৰোৱা হ’ল!`);
-      fetchAllData();
     }
   };
 
   const handleDismissRemovalRequest = async (id: string | number) => {
     if (window.confirm('এই অনুৰোধ নাকচ কৰিব বিচাৰিছেনে?')) {
-      await supabase.from('worker_removal_requests').delete().eq('id', id);
-      fetchAllData();
+      await runChange(
+        supabase.from('worker_removal_requests').delete().eq('id', id).select('id'),
+        '🗑️ অনুৰোধ নাকচ কৰা হ’ল (Request dismissed)'
+      );
     }
   };
 
   // --- Opportunity Actions ---
   const handleToggleJobStatus = async (id: string | number, currentApproved: boolean) => {
     const nextStatus = !currentApproved;
-    const { error } = await supabase.from('opportunities').update({ is_approved: nextStatus }).eq('id', id);
-    if (!error) {
-      setStatusMsg(nextStatus ? '✅ নিয়োগ পদ অনুমোদন কৰা হ’ল' : '⚠️ নিয়োগ পদ প্ৰত্যাখ্যান / লুকুওৱা হ’ল');
-      fetchAllData();
-    }
+    await runChange(
+      supabase.from('opportunities').update({ is_approved: nextStatus }).eq('id', id).select('id'),
+      nextStatus ? '✅ নিয়োগ পদ অনুমোদন কৰা হ’ল' : '⚠️ নিয়োগ পদ প্ৰত্যাখ্যান / লুকুওৱা হ’ল'
+    );
   };
 
   const handleDeleteJob = async (id: string | number) => {
     if (window.confirm('নিশ্চিতনে এই নিয়োগ বাৰ্তা মচি পেলাব? (Delete opportunity?)')) {
-      const { error } = await supabase.from('opportunities').delete().eq('id', id);
-      if (!error) fetchAllData();
+      await runChange(supabase.from('opportunities').delete().eq('id', id).select('id'), '🗑️ নিয়োগ বাৰ্তা মচা হ’ল (Opportunity deleted)');
     }
   };
 
   // --- Scholarship Actions ---
   const handleToggleScholarshipStatus = async (id: string | number, currentApproved: boolean) => {
     const nextStatus = !currentApproved;
-    const { error } = await supabase.from('scholarships').update({ is_approved: nextStatus }).eq('id', id);
-    if (!error) {
-      setStatusMsg(nextStatus ? '✅ ছাত্ৰবৃত্তি অনুমোদন কৰা হ’ল' : '⚠️ ছাত্ৰবৃত্তি প্ৰত্যাখ্যান / লুকুওৱা হ’ল');
-      fetchAllData();
-    }
+    await runChange(
+      supabase.from('scholarships').update({ is_approved: nextStatus }).eq('id', id).select('id'),
+      nextStatus ? '✅ ছাত্ৰবৃত্তি অনুমোদন কৰা হ’ল' : '⚠️ ছাত্ৰবৃত্তি প্ৰত্যাখ্যান / লুকুওৱা হ’ল'
+    );
   };
 
   const handleDeleteScholarship = async (id: string | number) => {
     if (window.confirm('নিশ্চিতনে এই ছাত্ৰবৃত্তি মচি পেলাব? (Delete scholarship?)')) {
-      const { error } = await supabase.from('scholarships').delete().eq('id', id);
-      if (!error) fetchAllData();
+      await runChange(supabase.from('scholarships').delete().eq('id', id).select('id'), '🗑️ ছাত্ৰবৃত্তি মচা হ’ল (Scholarship deleted)');
     }
   };
 
   // --- Entrance Exam Actions ---
   const handleToggleExamStatus = async (id: string | number, currentApproved: boolean) => {
     const nextStatus = !currentApproved;
-    const { error } = await supabase.from('entrance_exams').update({ is_approved: nextStatus }).eq('id', id);
-    if (!error) {
-      setStatusMsg(nextStatus ? '✅ প্ৰৱেশ পৰীক্ষা অনুমোদন কৰা হ’ল' : '⚠️ প্ৰৱেশ পৰীক্ষা প্ৰত্যাখ্যান / লুকুওৱা হ’ল');
-      fetchAllData();
-    }
+    await runChange(
+      supabase.from('entrance_exams').update({ is_approved: nextStatus }).eq('id', id).select('id'),
+      nextStatus ? '✅ প্ৰৱেশ পৰীক্ষা অনুমোদন কৰা হ’ল' : '⚠️ প্ৰৱেশ পৰীক্ষা প্ৰত্যাখ্যান / লুকুওৱা হ’ল'
+    );
   };
 
   const handleDeleteExam = async (id: string | number) => {
     if (window.confirm('নিশ্চিতনে এই পৰীক্ষা মচি পেলাব? (Delete exam?)')) {
-      const { error } = await supabase.from('entrance_exams').delete().eq('id', id);
-      if (!error) fetchAllData();
+      await runChange(supabase.from('entrance_exams').delete().eq('id', id).select('id'), '🗑️ পৰীক্ষা মচা হ’ল (Exam deleted)');
     }
   };
 
   // --- Notice Actions ---
   const handleCreateNotice = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from('notices').insert([{
-      title_en: noticeTitleEn,
-      title_as: noticeTitleAs,
-      details_en: noticeDetailsEn,
-      details_as: noticeDetailsAs,
-      is_pinned: noticePinned
-    }]);
+    const published = await runChange(
+      supabase.from('notices').insert([{
+        title_en: noticeTitleEn,
+        title_as: noticeTitleAs,
+        details_en: noticeDetailsEn,
+        details_as: noticeDetailsAs,
+        is_pinned: noticePinned
+      }]).select('id'),
+      '✅ জাননী সফলভাৱে প্ৰকাশ পালে! (Notice Published)'
+    );
 
-    if (!error) {
+    if (published) {
       setNoticeTitleEn('');
       setNoticeTitleAs('');
       setNoticeDetailsEn('');
       setNoticeDetailsAs('');
       setNoticePinned(false);
-      fetchAllData();
-      alert('জাননী সফলভাৱে প্ৰকাশ পালে! (Notice Published)');
-    } else {
-      alert(`Error: ${error.message}`);
     }
   };
 
   const handleToggleNoticePin = async (id: string | number, currentPinned: boolean) => {
-    const { error } = await supabase.from('notices').update({ is_pinned: !currentPinned }).eq('id', id);
-    if (!error) fetchAllData();
+    await runChange(
+      supabase.from('notices').update({ is_pinned: !currentPinned }).eq('id', id).select('id'),
+      currentPinned ? '📌 জাননী আনপিন কৰা হ’ল (Unpinned)' : '📌 জাননী পিন কৰা হ’ল (Pinned)'
+    );
   };
 
   const handleDeleteNotice = async (id: string | number) => {
     if (window.confirm('এই জাননীখন মচি পেলাব বিচাৰিছেনে? (Delete notice?)')) {
-      const { error } = await supabase.from('notices').delete().eq('id', id);
-      if (!error) fetchAllData();
+      await runChange(supabase.from('notices').delete().eq('id', id).select('id'), '🗑️ জাননী মচা হ’ল (Notice deleted)');
     }
   };
 
@@ -422,7 +441,7 @@ export const Admin: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchAllData}
+              onClick={() => fetchAllData()}
               disabled={refreshing}
               className="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow"
             >
@@ -825,6 +844,11 @@ export const Admin: React.FC = () => {
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${j.is_approved ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}`}>
                           {j.is_approved ? 'অনুমোদিত' : 'লুকুওৱা (Hidden)'}
                         </span>
+                        {j.deadline && daysUntil(j.deadline) < 0 && (
+                          <span className="text-[9px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                            ম্যাদ উকলিছে (Expired)
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11px] text-slate-400 mt-1">{item.organization || item.department_en || 'Govt / Scheme'} {item.salary_stipend ? `• ${item.salary_stipend}` : ''} • শেষ তাৰিখ: {j.deadline}</p>
                     </div>
@@ -868,6 +892,11 @@ export const Admin: React.FC = () => {
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${s.is_approved ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}`}>
                           {s.is_approved ? 'অনুমোদিত' : 'লুকুওৱা (Hidden)'}
                         </span>
+                        {s.deadline && daysUntil(s.deadline) < 0 && (
+                          <span className="text-[9px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                            ম্যাদ উকলিছে (Expired)
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11px] text-slate-400 mt-1">{item.provider || 'Govt'} {(item.benefit_amount || item.amount) ? `• ${item.benefit_amount || item.amount}` : ''} • শেষ তাৰিখ: {s.deadline}</p>
                     </div>
@@ -907,12 +936,17 @@ export const Admin: React.FC = () => {
                   <div key={e.id} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex flex-wrap justify-between items-center gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-xs sm:text-sm">{item.exam_as || item.exam_name || item.title_as || item.title_en}</h4>
+                        <h4 className="font-bold text-white text-xs sm:text-sm">{item.exam_name_as || item.exam_name_en || item.exam_as || item.exam_name || item.title_as || item.title_en}</h4>
                         <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${e.is_approved ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}`}>
                           {e.is_approved ? 'অনুমোদিত' : 'লুকুওৱা (Hidden)'}
                         </span>
+                        {e.deadline && daysUntil(e.deadline) < 0 && (
+                          <span className="text-[9px] px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                            ম্যাদ উকলিছে (Expired)
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">{item.conducting_body || 'Authority'} • পৰীক্ষা: {item.exam_date || item.deadline}</p>
+                      <p className="text-[11px] text-slate-400 mt-1">{item.conducting_body || 'Authority'} • শেষ তাৰিখ: {e.deadline}{item.exam_date ? ` • পৰীক্ষা: ${item.exam_date}` : ''}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
