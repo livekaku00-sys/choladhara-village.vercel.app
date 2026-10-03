@@ -31,6 +31,9 @@ interface DailyForecast {
   date: string;
   dayNameEn: string;
   dayNameAs: string;
+  // Phrase for advisories: "today", "tomorrow", "on Sunday"
+  whenEn: string;
+  whenAs: string;
   weatherCode: number;
   maxTemp: number;
   minTemp: number;
@@ -264,6 +267,11 @@ const ADVISORY_CATEGORY_LABEL: Record<Advisory['category'], { en: string; as: st
 
 const DAY_NAMES_AS = ['দেও', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহ', 'শুক্ৰ', 'শনি'];
 const DAY_NAMES_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const FULL_DAY_NAMES_AS = ['দেওবাৰে', 'সোমবাৰে', 'মঙ্গলবাৰে', 'বুধবাৰে', 'বৃহস্পতিবাৰে', 'শুক্ৰবাৰে', 'শনিবাৰে'];
+const FULL_DAY_NAMES_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// IMD daily rainfall bands (mm)
+const MODERATE_RAIN_MM = 15.6;
 
 // Auto-refresh every 15 minutes so the section never goes stale on a long-open tab
 const AUTO_REFRESH_MS = 15 * 60 * 1000;
@@ -318,6 +326,8 @@ export const WeatherSection: React.FC = () => {
             date: `${d.getDate()}/${d.getMonth() + 1}`,
             dayNameEn: idx === 0 ? 'Today' : DAY_NAMES_EN[dayIdx],
             dayNameAs: idx === 0 ? 'আজি' : DAY_NAMES_AS[dayIdx],
+            whenEn: idx === 0 ? 'today' : idx === 1 ? 'tomorrow' : `on ${FULL_DAY_NAMES_EN[dayIdx]}`,
+            whenAs: idx === 0 ? 'আজি' : idx === 1 ? 'কাইলৈ' : FULL_DAY_NAMES_AS[dayIdx],
             weatherCode: data.daily.weather_code[idx],
             maxTemp: Math.round(data.daily.temperature_2m_max[idx]),
             minTemp: Math.round(data.daily.temperature_2m_min[idx]),
@@ -387,33 +397,25 @@ export const WeatherSection: React.FC = () => {
 
     const advisories: Advisory[] = [];
     const next3Days = forecast.slice(0, 3);
+    const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+    const whenList = (days: DailyForecast[], as: boolean) =>
+      days.map(d => (as ? d.whenAs : d.whenEn)).join(as ? ', ' : ' and ');
 
+    // First hour in the next 24 h where rain is likely, to say when it starts
+    const firstRainHour = hourly.find(h => h.rainProb >= 60);
+    const rainStartEn = firstRainHour
+      ? firstRainHour.hourLabelEn === 'Now' ? ' Rain is likely right now.' : ` Rain likely from around ${firstRainHour.hourLabelEn}.`
+      : '';
+    const rainStartAs = firstRainHour
+      ? firstRainHour.hourLabelAs === 'এতিয়া' ? ' এতিয়াই বৰষুণৰ সম্ভাৱনা।' : ` প্ৰায় ${firstRainHour.hourLabelAs}ৰ পৰা বৰষুণ আৰম্ভ হ'ব পাৰে।`
+      : '';
+
+    // 1. Thunderstorm — highest priority
     const stormyDays = next3Days.filter(d => [95, 96, 99].includes(d.weatherCode));
     const stormyNow = [95, 96, 99].includes(current.weatherCode);
-
-    const rainyDays = next3Days.filter(d => d.rainProb > 50);
-    // Heavy = enough rain to matter (IMD "rather heavy" starts at ~35 mm/day), not just a high chance of drizzle
-    const heavyRainDays = next3Days.filter(d => d.precipitationSum >= HEAVY_RAIN_MM);
-    // Pick the single worst day to quote specific numbers from
-    const peakRainDay = next3Days.reduce((max, d) => (d.rainProb > max.rainProb ? d : max), next3Days[0]);
-    const wettestDay = next3Days.reduce((max, d) => (d.precipitationSum > max.precipitationSum ? d : max), next3Days[0]);
-
-    const isHot = current.uvIndex >= 7 || current.temp > 33;
-    const isFoggy = [45, 48].includes(current.weatherCode);
-    const isHumidRainy = current.humidity > 75 && rainyDays.length > 0;
-    const isWindy = current.windSpeed > 30;
-
-    const dayList = (days: DailyForecast[]) =>
-      days.map(d => (isAs ? d.dayNameAs : d.dayNameEn)).join(', ');
-
-    // Thunderstorm safety — highest priority, names the actual day(s) and current reading
     if (stormyNow || stormyDays.length > 0) {
-      const whenEn = stormyNow
-        ? 'right now'
-        : `expected on ${dayList(stormyDays)}`;
-      const whenAs = stormyNow
-        ? 'এতিয়াই'
-        : `${dayList(stormyDays)}ত সম্ভাৱনা আছে`;
+      const whenEn = stormyNow ? 'right now' : `expected ${whenList(stormyDays, false)}`;
+      const whenAs = stormyNow ? 'এতিয়াই' : `${whenList(stormyDays, true)} সম্ভাৱনা আছে`;
       advisories.push({
         id: 'thunder',
         category: 'safety',
@@ -421,62 +423,97 @@ export const WeatherSection: React.FC = () => {
         icon: Zap,
         titleEn: 'Lightning & Thunderstorm Alert',
         titleAs: 'বজ্ৰপাত আৰু ধুমুহাৰ সতৰ্কতা',
-        textEn: `Thunderstorm activity ${whenEn} (current reading: ${current.temp}°C, wind ${current.windSpeed} km/h). Avoid open fields, tall trees, and water bodies. Unplug electrical appliances and stay indoors until it passes.`,
-        textAs: `ধুমুহা/বজ্ৰপাতৰ সম্ভাৱনা ${whenAs} (বৰ্তমান: ${current.temp}°সে, বতাহ ${current.windSpeed} km/h)। মুকলি পথাৰ, ওখ গছ আৰু পানীৰ কাষৰ পৰা আঁতৰি থাকক। বৈদ্যুতিক সঁজুলি বিচ্ছিন্ন কৰি ঘৰৰ ভিতৰত থাকক।`
+        textEn: `Thunderstorms ${whenEn} (now ${current.temp}°C, wind ${current.windSpeed} km/h). Avoid open fields, tall trees and water bodies, unplug appliances and stay indoors until it passes.`,
+        textAs: `ধুমুহা/বজ্ৰপাত ${whenAs} (বৰ্তমান ${current.temp}°সে, বতাহ ${current.windSpeed} km/h)। মুকলি পথাৰ, ওখ গছ আৰু পানীৰ কাষৰ পৰা আঁতৰি থাকক, বৈদ্যুতিক সঁজুলি বিচ্ছিন্ন কৰি ঘৰৰ ভিতৰত থাকক।`
       });
     }
 
-    // Flood / heavy rain vs regular rain (agriculture) — quotes exact % and mm for the peak day
-    if (heavyRainDays.length > 0) {
+    // 2. Rain — graded by expected amount on the wettest likely-rain day
+    const rainyDays = next3Days.filter(d => d.rainProb > 50 || d.precipitationSum >= HEAVY_RAIN_MM);
+    const rainDay = rainyDays.reduce<DailyForecast | null>(
+      (max, d) => (!max || d.precipitationSum > max.precipitationSum ? d : max),
+      null
+    );
+    if (rainDay) {
+      const mm = rainDay.precipitationSum;
+      if (mm >= HEAVY_RAIN_MM) {
+        advisories.push({
+          id: 'rain-heavy',
+          category: 'safety',
+          severity: 'danger',
+          icon: Waves,
+          titleEn: 'Heavy Rain & Waterlogging Risk',
+          titleAs: 'অতি বৰষুণ আৰু পানী জমাৰ আশংকা',
+          textEn: `About ${mm}mm of rain expected ${rainDay.whenEn} (${rainDay.rainProb}% chance).${rainStartEn} Low-lying areas may flood — keep documents and grain stocks raised, avoid crossing flooded roads and watch local water levels.`,
+          textAs: `${rainDay.whenAs} প্ৰায় ${mm}মিমি বৰষুণৰ সম্ভাৱনা (${rainDay.rainProb}%)।${rainStartAs} নিম্ন অঞ্চলত পানী জমা হ'ব পাৰে — কাগজ-পত্ৰ আৰু শস্য ওখ ঠাইত ৰাখক, পানী জমা পথেৰে যাতায়াত নকৰিব আৰু নদীৰ পানীৰ স্তৰ লক্ষ্য কৰক।`
+        });
+      } else if (mm >= MODERATE_RAIN_MM) {
+        advisories.push({
+          id: 'rain-moderate',
+          category: 'agriculture',
+          severity: 'warning',
+          icon: CloudRain,
+          titleEn: 'Moderate Rain Expected',
+          titleAs: 'মধ্যমীয়া বৰষুণৰ সম্ভাৱনা',
+          textEn: `About ${mm}mm of rain expected ${rainDay.whenEn} (${rainDay.rainProb}% chance).${rainStartEn} Postpone grain drying and fertilizer or pesticide spraying, clear field drainage channels and harvest ripe crops early.`,
+          textAs: `${rainDay.whenAs} প্ৰায় ${mm}মিমি বৰষুণৰ সম্ভাৱনা (${rainDay.rainProb}%)।${rainStartAs} ধান শুকুওৱা আৰু সাৰ/দৰৱ ছটিওৱা স্থগিত ৰাখক, পথাৰৰ নলা পৰিষ্কাৰ কৰক আৰু পকা শস্য সোনকালে চপাওক।`
+        });
+      } else {
+        advisories.push({
+          id: 'rain-light',
+          category: 'agriculture',
+          severity: 'info',
+          icon: CloudDrizzle,
+          titleEn: 'Light Rain Expected',
+          titleAs: 'পাতলীয়া বৰষুণৰ সম্ভাৱনা',
+          textEn: `${cap(rainDay.whenEn)}: ${rainDay.rainProb}% chance of light rain (~${mm}mm).${rainStartEn} Keep a tarpaulin ready for drying grain and avoid spraying fertilizer until it clears.`,
+          textAs: `${rainDay.whenAs} ${rainDay.rainProb}% পাতলীয়া বৰষুণৰ সম্ভাৱনা (~${mm}মিমি)।${rainStartAs} শুকুবলৈ দিয়া ধান ঢাকিবলৈ তিৰপাল সাজু ৰাখক আৰু আকাশ পৰিষ্কাৰ নোহোৱালৈকে সাৰ নিছটিয়াব।`
+        });
+      }
+    }
+
+    // 3. Heat — graded by live temperature / UV
+    if (current.temp >= 37) {
       advisories.push({
-        id: 'flood',
-        category: 'safety',
+        id: 'heat-extreme',
+        category: 'health',
         severity: 'danger',
-        icon: Waves,
-        titleEn: 'Heavy Rain & Waterlogging Risk',
-        titleAs: 'অতি বৰষুণ আৰু পানী জমাৰ আশংকা',
-        textEn: `${wettestDay.dayNameEn} shows a ${wettestDay.rainProb}% chance of rain with an estimated ${wettestDay.precipitationSum}mm rainfall. Low-lying areas may flood — keep documents safe, avoid crossing flooded roads, and monitor local water levels.`,
-        textAs: `${wettestDay.dayNameAs}ত ${wettestDay.rainProb}% বৰষুণৰ সম্ভাৱনা আৰু আনুমানিক ${wettestDay.precipitationSum}মিমি বৰষুণ হ'ব পাৰে। নিম্ন অঞ্চলত পানী জমা হ'ব পাৰে — কাগজ-পত্ৰ সাৱধানে ৰাখক আৰু পানী জমা হোৱা পথেৰে যাতায়াত নকৰিব।`
+        icon: Thermometer,
+        titleEn: 'Extreme Heat Alert',
+        titleAs: 'তীব্ৰ গৰমৰ সতৰ্কতা',
+        textEn: `It is ${current.temp}°C now (feels like ${current.apparentTemp}°C). Stay out of direct sun from 11 AM to 4 PM, drink water often and check on children, the elderly and livestock.`,
+        textAs: `এতিয়া ${current.temp}°সে (অনুভৱ ${current.apparentTemp}°সে)। পুৱা ১১ বজাৰ পৰা আবেলি ৪ বজালৈ পোনপটীয়া ৰ'দত নাথাকিব, সঘনাই পানী খাওক আৰু শিশু, বৃদ্ধ আৰু গৰু-ছাগলীৰ যত্ন লওক।`
       });
-    } else if (rainyDays.length > 0) {
+    } else if (current.uvIndex >= 7 || current.temp > 33) {
       advisories.push({
-        id: 'rain-agri',
-        category: 'agriculture',
-        severity: 'warning',
-        icon: Sprout,
-        titleEn: 'Agro-Solar Advisory',
-        titleAs: 'কৃষি পৰামৰ্শ',
-        textEn: `${peakRainDay.rainProb}% rain probability on ${peakRainDay.dayNameEn} (~${peakRainDay.precipitationSum}mm). Postpone open-yard grain sun-drying and fertilizer spraying until skies clear.`,
-        textAs: `${peakRainDay.dayNameAs}ত ${peakRainDay.rainProb}% বৰষুণৰ সম্ভাৱনা (~${peakRainDay.precipitationSum}মিমি)। আকাশ পৰিষ্কাৰ নোহোৱালৈকে মুকলি চোতালত ধান শুকুওৱা আৰু সাৰ ছটিওৱাৰ কাম স্থগিত ৰাখক।`
-      });
-    }
-
-    // Heat: agriculture + health — quotes actual live temp and UV index
-    if (isHot) {
-      advisories.push({
-        id: 'heat-agri',
-        category: 'agriculture',
-        severity: 'warning',
-        icon: Sprout,
-        titleEn: 'Agro-Solar Advisory',
-        titleAs: 'কৃষি পৰামৰ্শ',
-        textEn: `Current temperature ${current.temp}°C with UV index ${current.uvIndex}. Irrigate vegetable beds and nurseries during early morning or evening to avoid midday heat stress.`,
-        textAs: `বৰ্তমান উত্তাপ ${current.temp}°সে আৰু UV সূচক ${current.uvIndex}। দুপৰীয়াৰ উত্তাপ এৰাবলৈ পুৱা বা গধূলি সময়ত শাক-পাচলিৰ পথাৰ আৰু পুলিবাৰীত পানী যোগান ধৰক।`
-      });
-      advisories.push({
-        id: 'heat-health',
+        id: 'heat',
         category: 'health',
         severity: 'warning',
         icon: Thermometer,
         titleEn: 'Heat & Sun Safety',
         titleAs: "গৰম আৰু ৰ'দৰ পৰা সুৰক্ষা",
-        textEn: `With UV index at ${current.uvIndex} and ${current.temp}°C, stay hydrated and avoid direct sun between 12-3 PM. Watch for signs of heat exhaustion in children and the elderly.`,
-        textAs: `UV সূচক ${current.uvIndex} আৰু উত্তাপ ${current.temp}°সে হোৱাত, পৰ্যাপ্ত পানী পান কৰক আৰু দুপৰীয়া ১২-৩ বজাৰ ভিতৰত পোনপটীয়া ৰ'দৰ পৰা আঁতৰি থাকক। শিশু আৰু বৃদ্ধসকলৰ প্ৰতি বিশেষভাৱে দৃষ্টি ৰাখক।`
+        textEn: `${current.temp}°C with UV index ${current.uvIndex}. Avoid direct sun between 12 and 3 PM, stay hydrated, and water vegetable beds early morning or evening.`,
+        textAs: `${current.temp}°সে আৰু UV সূচক ${current.uvIndex}। দুপৰীয়া ১২-৩ বজালৈ পোনপটীয়া ৰ'দৰ পৰা আঁতৰি থাকক, পৰ্যাপ্ত পানী খাওক আৰু শাক-পাচলিত পুৱা বা গধূলি পানী দিয়ক।`
       });
     }
 
-    // Fog safety — references live conditions
-    if (isFoggy) {
+    // 4. Cold nights (Assam winters) — coldest of the next 3 nights
+    const coldestDay = next3Days.reduce((min, d) => (d.minTemp < min.minTemp ? d : min), next3Days[0]);
+    if (coldestDay.minTemp <= 10) {
+      advisories.push({
+        id: 'cold',
+        category: 'health',
+        severity: coldestDay.minTemp <= 6 ? 'danger' : 'warning',
+        icon: Thermometer,
+        titleEn: 'Cold Night Alert',
+        titleAs: 'শীতল ৰাতিৰ সতৰ্কতা',
+        textEn: `Low of ${coldestDay.minTemp}°C expected ${coldestDay.whenEn}. Keep children and the elderly warm, shelter livestock at night and cover nursery beds and seedlings.`,
+        textAs: `${coldestDay.whenAs} নিম্নতম উষ্ণতা ${coldestDay.minTemp}°সে হ'ব পাৰে। শিশু আৰু বৃদ্ধসকলক উম দিয়ক, ৰাতি গৰু-ছাগলী আশ্ৰয়ত ৰাখক আৰু কঠীয়াতলী ঢাকি ৰাখক।`
+      });
+    }
+
+    // 5. Fog — live conditions
+    if ([45, 48].includes(current.weatherCode)) {
       advisories.push({
         id: 'fog',
         category: 'safety',
@@ -484,13 +521,27 @@ export const WeatherSection: React.FC = () => {
         icon: ShieldAlert,
         titleEn: 'Low Visibility Advisory',
         titleAs: 'কম দৃশ্যমানতাৰ সতৰ্কবাণী',
-        textEn: `Fog currently reported in the area (${current.temp}°C, humidity ${current.humidity}%). Drive slowly with headlights on and maintain a safe distance.`,
-        textAs: `বৰ্তমান অঞ্চলত কুঁৱলী আছে (${current.temp}°সে, আৰ্দ্ৰতা ${current.humidity}%)। গাড়ী লাহে চলাওক, হেডলাইট জ্বলাই ৰাখক আৰু নিৰাপদ দূৰত্ব বজাই ৰাখক।`
+        textEn: `Fog in the area now (${current.temp}°C, humidity ${current.humidity}%). Drive slowly with headlights on and keep a safe distance.`,
+        textAs: `এতিয়া অঞ্চলত কুঁৱলী আছে (${current.temp}°সে, আৰ্দ্ৰতা ${current.humidity}%)। গাড়ী লাহে চলাওক, হেডলাইট জ্বলাই ৰাখক আৰু নিৰাপদ দূৰত্ব ৰাখক।`
       });
     }
 
-    // Humid + rainy: mosquito-borne illness caution — quotes live humidity %
-    if (isHumidRainy) {
+    // 6. Strong wind — live reading
+    if (current.windSpeed > 30) {
+      advisories.push({
+        id: 'wind',
+        category: 'safety',
+        severity: current.windSpeed > 50 ? 'danger' : 'warning',
+        icon: Wind,
+        titleEn: 'Strong Wind Advisory',
+        titleAs: 'প্ৰবল বতাহৰ সতৰ্কতা',
+        textEn: `Wind at ${current.windSpeed} km/h now. Secure loose roofing, tarpaulins and outdoor items, and take care on boats and open water.`,
+        textAs: `এতিয়া বতাহৰ গতি ${current.windSpeed} km/h। ঘৰৰ চাল, তিৰপাল আৰু বাহিৰৰ বস্তু সুৰক্ষিত কৰক, নাও চলোৱাত সাৱধান হওক।`
+      });
+    }
+
+    // 7. Humid + rain: mosquito-borne illness
+    if (current.humidity > 75 && rainDay) {
       advisories.push({
         id: 'mosquito',
         category: 'health',
@@ -498,36 +549,22 @@ export const WeatherSection: React.FC = () => {
         icon: Bug,
         titleEn: 'Mosquito-Borne Illness Caution',
         titleAs: 'মহৰ পৰা হোৱা ৰোগৰ সতৰ্কতা',
-        textEn: `Humidity at ${current.humidity}% with rain expected on ${peakRainDay.dayNameEn} increases mosquito breeding risk. Remove standing water near homes and use nets to help prevent dengue/malaria.`,
-        textAs: `আৰ্দ্ৰতা ${current.humidity}% আৰু ${peakRainDay.dayNameAs}ত বৰষুণৰ সম্ভাৱনাৰ বাবে মহৰ প্ৰজনন বাঢ়িব পাৰে। ঘৰৰ কাষত জমা পানী আঁতৰাওক আৰু মহৰ পৰা ৰক্ষা পাবলৈ জাল ব্যৱহাৰ কৰক।`
+        textEn: `Humidity is ${current.humidity}% and rain is likely ${rainDay.whenEn}, which helps mosquitoes breed. Empty standing water near homes and sleep under nets to prevent dengue and malaria.`,
+        textAs: `আৰ্দ্ৰতা ${current.humidity}% আৰু ${rainDay.whenAs} বৰষুণৰ সম্ভাৱনা থকাত মহৰ প্ৰজনন বাঢ়িব পাৰে। ঘৰৰ কাষৰ জমা পানী আঁতৰাওক আৰু ডেংগু-মেলেৰিয়াৰ পৰা বাচিবলৈ মহজালত শুওক।`
       });
     }
 
-    // Strong wind — quotes exact live wind speed
-    if (isWindy) {
-      advisories.push({
-        id: 'wind',
-        category: 'safety',
-        severity: 'warning',
-        icon: Wind,
-        titleEn: 'Strong Wind Advisory',
-        titleAs: 'প্ৰবল বতাহৰ সতৰ্কতা',
-        textEn: `Wind speed currently at ${current.windSpeed} km/h. Secure loose roofing, tarpaulins, and outdoor items. Exercise caution with boats and fishing near open water.`,
-        textAs: `বৰ্তমান বতাহৰ গতি ${current.windSpeed} km/h। ঘৰৰ চাল, তিৰপল আৰু বাহিৰৰ বস্তুবোৰ সুৰক্ষিত কৰক। নাও চলোৱা আৰু মাছ ধৰাত সাৱধান হওক।`
-      });
-    }
-
-    // Fallback: good weather, nothing urgent to flag — still quotes live numbers
+    // Nothing to flag: say so with live numbers
     if (advisories.length === 0) {
       advisories.push({
         id: 'good',
         category: 'agriculture',
         severity: 'info',
         icon: Sprout,
-        titleEn: 'Agro-Solar Advisory',
-        titleAs: 'কৃষি পৰামৰ্শ',
-        textEn: `Favorable conditions: ${current.temp}°C, ${current.humidity}% humidity, UV ${current.uvIndex}. Ideal for regular field activities, crop care, and sun drying.`,
-        textAs: `অনুকূল বতৰ: ${current.temp}°সে, আৰ্দ্ৰতা ${current.humidity}%, UV ${current.uvIndex}। শস্যৰ যতন, শুকুওৱা আৰু নিয়মীয়া পথাৰৰ কাম-কাজৰ বাবে সৰ্বোত্তম সময়।`
+        titleEn: 'Good Weather for Field Work',
+        titleAs: 'পথাৰৰ কামৰ বাবে অনুকূল বতৰ',
+        textEn: `${current.temp}°C, ${current.humidity}% humidity and no significant rain in the next 3 days. A good time for field work, spraying and sun-drying grain.`,
+        textAs: `${current.temp}°সে, আৰ্দ্ৰতা ${current.humidity}% আৰু আগন্তুক ৩ দিনত উল্লেখযোগ্য বৰষুণৰ সম্ভাৱনা নাই। পথাৰৰ কাম, দৰৱ ছটিওৱা আৰু ধান শুকুওৱাৰ বাবে উপযুক্ত সময়।`
       });
     }
 
