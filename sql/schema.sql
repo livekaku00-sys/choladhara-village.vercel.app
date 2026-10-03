@@ -77,8 +77,4 @@ CREATE POLICY "Allow public read on opportunities" ON public.opportunities FOR S
 CREATE POLICY "Allow public worker insert" ON public.skilled_workers FOR INSERT WITH CHECK (is_verified = false);
 CREATE POLICY "Allow tracker scholarship insert" ON public.scholarships FOR INSERT WITH CHECK (is_approved = false);
 
-CREATE POLICY "Allow admin all on rates" ON public.daily_rates FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow admin all on notices" ON public.notices FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow admin all on workers" ON public.skilled_workers FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow admin all on scholarships" ON public.scholarships FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow admin all on opportunities" ON public.opportunities FOR ALL TO authenticated USING (true);
+-- Admin write policies live in admin_security.sql (run it after this file).

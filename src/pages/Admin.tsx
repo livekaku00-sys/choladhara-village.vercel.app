@@ -33,6 +33,7 @@ interface RemovalRequest {
 export const Admin: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
@@ -61,19 +62,33 @@ export const Admin: React.FC = () => {
   const [noticePinned, setNoticePinned] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Only load data for accounts listed in public.admins (see sql/admin_security.sql).
+    // The database policies enforce this too; this check just gives non-admins a clear message.
+    const handleSession = async (session: any) => {
       setSession(session);
+      if (!session) {
+        setIsAdmin(null);
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase.rpc('is_admin');
+      if (error) {
+        // is_admin() not installed yet: fall back to the old behaviour and warn.
+        console.warn('is_admin() check failed — run sql/admin_security.sql in Supabase:', error.message);
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(data === true);
+      }
       setLoading(false);
-      if (session) {
+      if (error || data === true) {
         fetchAllData();
       }
-    });
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => handleSession(session));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchAllData();
-      }
+      handleSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -324,6 +339,33 @@ export const Admin: React.FC = () => {
           </form>
 
           <div className="mt-6 pt-4 border-t border-slate-800/80 text-center">
+            <Link to="/" className="text-xs text-slate-400 hover:text-emerald-400 inline-flex items-center gap-1.5 transition">
+              <HomeIcon className="w-3.5 h-3.5" />
+              <span>মুখ্য পৃষ্ঠালৈ ঘূৰি যাওক (Back to Home)</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAdmin === false) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center">
+          <div className="inline-flex p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 mb-3">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-bold">অনুমতি নাই</h2>
+          <p className="text-xs text-slate-400 mt-1">This account is not an admin.</p>
+          <button
+            onClick={handleLogout}
+            className="mt-6 w-full bg-slate-800 hover:bg-slate-700 font-bold py-3 rounded-xl text-sm transition inline-flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>লগ আউট (Sign Out)</span>
+          </button>
+          <div className="mt-6 pt-4 border-t border-slate-800/80">
             <Link to="/" className="text-xs text-slate-400 hover:text-emerald-400 inline-flex items-center gap-1.5 transition">
               <HomeIcon className="w-3.5 h-3.5" />
               <span>মুখ্য পৃষ্ঠালৈ ঘূৰি যাওক (Back to Home)</span>

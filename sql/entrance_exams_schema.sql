@@ -30,7 +30,4 @@ CREATE POLICY "Allow tracker exam insert"
 ON public.entrance_exams FOR INSERT 
 WITH CHECK (is_approved = false);
 
-CREATE POLICY "Allow admin all on exams" 
-ON public.entrance_exams FOR ALL 
-TO authenticated 
-USING (true);
+-- Admin write policy lives in admin_security.sql (run it after this file).
