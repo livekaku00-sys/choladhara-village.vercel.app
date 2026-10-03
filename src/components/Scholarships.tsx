@@ -7,9 +7,11 @@ import {
   AlertCircle, 
   IndianRupee,
   Share2,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { daysLeftLabel, daysUntil, formatDate, localDateString } from '../lib/dates';
 import { useLanguage } from '../context/LanguageContext';
 
 export interface ScholarshipRecord {
@@ -26,6 +28,9 @@ export interface ScholarshipRecord {
   amount_as?: string;
   amount_en?: string;
   amount?: string;
+  // Column names used by the database (sql/schema.sql)
+  benefit_amount?: string;
+  apply_link?: string;
   deadline?: string;
   apply_url?: string;
   applyUrl?: string;
@@ -41,41 +46,34 @@ export const Scholarships: React.FC = () => {
 
   const [scholarships, setScholarships] = useState<ScholarshipRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
 
-  // Fetch scholarships dynamically from Supabase
+  // Approved scholarships whose deadline has not passed (RLS hides unapproved rows from
+  // visitors, but a logged-in admin would otherwise see them here too)
+  const fetchScholarships = async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const { data, error } = await supabase
+        .from('scholarships')
+        .select('*')
+        .eq('is_approved', true)
+        .or(`deadline.is.null,deadline.gte.${localDateString()}`)
+        .order('deadline', { ascending: true });
+
+      if (error) throw error;
+      setScholarships(data || []);
+    } catch (err) {
+      console.error('Error fetching scholarships:', err);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchScholarships = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('scholarships')
-          .select('*')
-          .order('deadline', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching scholarships:', error);
-        } else if (data) {
-          setScholarships(data);
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchScholarships();
   }, []);
-
-  // Calculate remaining days dynamically
-  const getDaysRemaining = (deadlineStr?: string) => {
-    if (!deadlineStr) return null;
-    const deadline = new Date(deadlineStr);
-    const now = new Date();
-    const diffTime = deadline.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
 
   const handleShare = (
     title: string,
@@ -84,13 +82,16 @@ export const Scholarships: React.FC = () => {
     deadline: string,
     applyUrl: string
   ) => {
-    const text = 
+    const label = isAs
+      ? { dept: 'বিভাগ', amount: 'আৰ্থিক সাহায্য', deadline: 'অন্তিম তাৰিখ', link: 'আবেদন লিংক', portal: 'চোলাধৰা ডিজিটেল গ্ৰাম্য প’ৰ্টেল' }
+      : { dept: 'Provider', amount: 'Benefit', deadline: 'Last date', link: 'Apply here', portal: 'Choladhara Digital Village Portal' };
+    const text =
       `🎓 *${title}*\n` +
-      `🏛️ বিভাগ: ${provider}\n` +
-      `💰 আৰ্থিক সাহায্য: ${amount}\n` +
-      (deadline ? `⏳ অন্তিম তাৰিখ: ${deadline}\n\n` : '\n') +
-      `🔗 আবেদন লিংক:\n${applyUrl}\n\n` +
-      `🌐 চোলাধৰা ডিজিটেল গ্ৰাম্য প’ৰ্টেল: https://choladhara-village.vercel.app`;
+      (provider ? `🏛️ ${label.dept}: ${provider}\n` : '') +
+      (amount ? `💰 ${label.amount}: ${amount}\n` : '') +
+      (deadline ? `⏳ ${label.deadline}: ${formatDate(deadline, isAs)}\n\n` : '\n') +
+      `🔗 ${label.link}:\n${applyUrl}\n\n` +
+      `🌐 ${label.portal}: https://choladhara-village.vercel.app`;
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
@@ -100,7 +101,7 @@ export const Scholarships: React.FC = () => {
   };
 
   return (
-    <section id="sec-scholarships" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
         
         {/* Decorative Background Accent */}
@@ -143,7 +144,25 @@ export const Scholarships: React.FC = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-3">
             <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
-            <p className="text-xs text-slate-400">ছাত্ৰবৃত্তিৰ তথ্য সংগ্ৰহ কৰা হৈছে...</p>
+            <p className="text-xs text-slate-400">
+              {isAs ? 'ছাত্ৰবৃত্তিৰ তথ্য সংগ্ৰহ কৰা হৈছে...' : 'Loading scholarships...'}
+            </p>
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-12 bg-slate-950/50 rounded-2xl border border-red-900/60 flex flex-col items-center gap-3">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+            <p className="text-xs text-slate-300">
+              {isAs
+                ? 'ছাত্ৰবৃত্তিৰ তথ্য লোড কৰিব পৰা নগ’ল। ইণ্টাৰনেট সংযোগ পৰীক্ষা কৰি পুনৰ চেষ্টা কৰক।'
+                : 'Could not load scholarships. Please check your connection and try again.'}
+            </p>
+            <button
+              onClick={fetchScholarships}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {isAs ? 'পুনৰ চেষ্টা কৰক' : 'Try Again'}
+            </button>
           </div>
         ) : scholarships.length === 0 ? (
           <div className="text-center py-12 bg-slate-950/50 rounded-2xl border border-dashed border-slate-800">
@@ -158,11 +177,13 @@ export const Scholarships: React.FC = () => {
               const title = isAs ? (item.title_as || item.title || item.title_en || '') : (item.title_en || item.title || item.title_as || '');
               const provider = isAs ? (item.provider_as || item.provider || item.provider_en || '') : (item.provider_en || item.provider || item.provider_as || '');
               const eligibility = isAs ? (item.eligibility_as || item.eligibility || item.eligibility_en || '') : (item.eligibility_en || item.eligibility || item.eligibility_as || '');
-              const amount = isAs ? (item.amount_as || item.amount || item.amount_en || '') : (item.amount_en || item.amount || item.amount_as || '');
+              const amount = isAs
+                ? (item.amount_as || item.benefit_amount || item.amount || item.amount_en || '')
+                : (item.amount_en || item.benefit_amount || item.amount || item.amount_as || '');
               const badge = isAs ? (item.badge_as || item.badge || item.badge_en || 'সাধাৰণ') : (item.badge_en || item.badge || item.badge_as || 'General');
-              const applyUrl = item.apply_url || item.applyUrl || 'https://scholarships.gov.in/';
+              const applyUrl = item.apply_link || item.apply_url || item.applyUrl || 'https://scholarships.gov.in/';
               const deadline = item.deadline || '';
-              const daysLeft = getDaysRemaining(deadline);
+              const daysLeft = deadline ? daysUntil(deadline) : null;
 
               return (
                 <div 
@@ -178,7 +199,7 @@ export const Scholarships: React.FC = () => {
                       {daysLeft !== null && (
                         <span className="text-[10px] font-bold text-amber-300 bg-amber-950/70 border border-amber-800/60 px-2 py-0.5 rounded flex items-center gap-1">
                           <Clock className="w-3 h-3 text-amber-400" />
-                          <span>{daysLeft} {isAs ? 'দিন বাকী' : 'days left'}</span>
+                          <span>{daysLeftLabel(daysLeft, isAs)}</span>
                         </span>
                       )}
                     </div>
@@ -210,6 +231,13 @@ export const Scholarships: React.FC = () => {
                         <IndianRupee className="w-3.5 h-3.5" />
                         <span>{amount}</span>
                       </div>
+                    )}
+
+                    {deadline && (
+                      <p className="text-[11px] text-slate-400">
+                        {isAs ? 'অন্তিম তাৰিখ: ' : 'Last date: '}
+                        <span className="font-semibold text-slate-300">{formatDate(deadline, isAs)}</span>
+                      </p>
                     )}
                   </div>
 

@@ -7,6 +7,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { daysLeftLabel, daysUntil, formatDate, localDateString } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 
 interface UrgentItem {
@@ -32,11 +33,11 @@ export const ClosingSoonBanner: React.FC = () => {
       setLoading(true);
       try {
         const today = new Date();
-        const todayIso = today.toISOString().split('T')[0];
+        const todayIso = localDateString(today);
 
         const targetDate = new Date();
         targetDate.setDate(today.getDate() + 15);
-        const targetIso = targetDate.toISOString().split('T')[0];
+        const targetIso = localDateString(targetDate);
 
         const { data: sData } = await supabase
           .from('scholarships')
@@ -56,7 +57,7 @@ export const ClosingSoonBanner: React.FC = () => {
 
         if (sData) {
           sData.forEach(s => {
-            const diffDays = Math.ceil((new Date(s.deadline).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const diffDays = daysUntil(s.deadline, today);
             combined.push({
               id: s.id,
               type: 'scholarship',
@@ -72,7 +73,7 @@ export const ClosingSoonBanner: React.FC = () => {
 
         if (eData) {
           eData.forEach(e => {
-            const diffDays = Math.ceil((new Date(e.deadline).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const diffDays = daysUntil(e.deadline, today);
             combined.push({
               id: e.id,
               type: 'exam',
@@ -142,7 +143,7 @@ export const ClosingSoonBanner: React.FC = () => {
                   <Clock className="w-3 h-3" />
                   {item.daysLeft === 0 
                     ? (isAs ? 'আজি অন্তিম দিন!' : 'Last Day Today!')
-                    : (isAs ? `${item.daysLeft} দিন বাকী` : `${item.daysLeft} days left`)}
+                    : daysLeftLabel(item.daysLeft, isAs)}
                 </span>
               </div>
 
@@ -156,7 +157,7 @@ export const ClosingSoonBanner: React.FC = () => {
 
             <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-xs">
               <span className="text-[10px] text-rose-200">
-                {isAs ? `অন্তিম: ${item.deadline}` : `Closes: ${item.deadline}`}
+                {isAs ? `অন্তিম: ${formatDate(item.deadline, true)}` : `Closes: ${formatDate(item.deadline, false)}`}
               </span>
 
               <a 
