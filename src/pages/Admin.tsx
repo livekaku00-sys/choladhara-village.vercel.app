@@ -20,6 +20,7 @@ import {
   UserMinus 
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { phoneDigits } from '../lib/phone';
 import type { SkilledWorker, Notice, Scholarship, EntranceExam, Opportunity } from '../types/database';
 
 interface RemovalRequest {
@@ -179,7 +180,18 @@ export const Admin: React.FC = () => {
   // --- Process Removal Request ---
   const handleApproveRemovalRequest = async (req: RemovalRequest) => {
     if (window.confirm(`নিশ্চিতনে ${req.worker_name} (${req.phone_number})-ৰ নাম ডাইৰেক্টৰিৰ পৰা আঁতৰাব?`)) {
-      await supabase.from('skilled_workers').delete().eq('phone_number', req.phone_number);
+      // Match on the 10 digits so older entries saved as "+91 98765 43210" are found too
+      const target = phoneDigits(req.phone_number);
+      const ids = workers.filter(w => phoneDigits(w.phone_number) === target).map(w => w.id);
+      if (ids.length === 0) {
+        setStatusMsg(`⚠️ ${req.phone_number} নম্বৰৰ কোনো কাৰিকৰ পোৱা নগ’ল (No worker with this number). অনুৰোধটো নাকচ কৰিব পাৰে।`);
+        return;
+      }
+      const { error } = await supabase.from('skilled_workers').delete().in('id', ids);
+      if (error) {
+        setStatusMsg(`ত্রুটি: ${error.message}`);
+        return;
+      }
       await supabase.from('worker_removal_requests').delete().eq('id', req.id);
       setStatusMsg(`✅ ${req.worker_name}-ৰ নাম সফলতাৰে আঁতৰোৱা হ’ল!`);
       fetchAllData();

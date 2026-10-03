@@ -12,10 +12,13 @@ import {
   X,
   Send,
   Filter,
-  Edit3
+  Edit3,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
+import { normalizeIndianMobile, whatsappLink } from '../lib/phone';
 
 export interface SkilledWorker {
   id: string | number;
@@ -49,6 +52,7 @@ export const SkilledWorkers: React.FC = () => {
   // Core Data State
   const [workers, setWorkers] = useState<SkilledWorker[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -66,6 +70,7 @@ export const SkilledWorkers: React.FC = () => {
   const [selectedAreaOption, setSelectedAreaOption] = useState(PREDEFINED_AREAS[0].key);
   const [customArea, setCustomArea] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [consent, setConsent] = useState(false);
 
   // Removal Request Form State
   const [removalWorkerName, setRemovalWorkerName] = useState('');
@@ -80,6 +85,7 @@ export const SkilledWorkers: React.FC = () => {
   const fetchWorkers = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const { data, error } = await supabase
         .from('skilled_workers')
         .select('*')
@@ -91,6 +97,7 @@ export const SkilledWorkers: React.FC = () => {
       }
     } catch (err) {
       console.error('Error loading skilled workers:', err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -118,6 +125,17 @@ export const SkilledWorkers: React.FC = () => {
     { key: 'Catering_Cook', label_as: 'ৰান্ধনী / কেটাৰিং (Cook & Catering)', label_en: 'Cook & Catering' },
     { key: 'Other', label_as: 'অন্যান্য কাৰিকৰ (Other Trades)', label_en: 'Other Trades' }
   ];
+
+  // Assamese trade name without the "(English)" suffix, e.g. "বিদ্যুৎ মিস্ত্ৰী"
+  const tradeNameAs = (opt: { label_as: string }) => opt.label_as.replace(/\s*\([^)]*\)\s*$/, '');
+
+  // Show the full trade name for the worker's skill. Older rows saved only the first
+  // Assamese word (e.g. "বিদ্যুৎ" for Electrician), so look it up from skill_en.
+  const displaySkill = (worker: SkilledWorker) => {
+    const opt = tradeOptions.find(t => t.key !== 'ALL' && t.label_en === worker.skill_en);
+    if (isAs) return opt ? tradeNameAs(opt) : (worker.skill_as || worker.skill_en);
+    return worker.skill_en || worker.skill_as;
+  };
 
   // 3. Dynamic Area Filter Options (Aggregates predefined + custom registered locations from chuburi_ward)
   const combinedAreaOptions = useMemo(() => {
@@ -152,7 +170,8 @@ export const SkilledWorkers: React.FC = () => {
       const workerPhone = (worker.phone_number || '');
 
       // Working Area Match (chuburi_ward)
-      const matchesArea = areaFilter === 'ALL' || workerArea.includes(areaFilter.toLowerCase());
+      // Exact match so "Charaideo" does not also include "Near Charaideo"
+      const matchesArea = areaFilter === 'ALL' || workerArea.trim() === areaFilter.toLowerCase();
 
       // Category Match
       let matchesCategory = categoryFilter === 'ALL';
@@ -190,6 +209,19 @@ export const SkilledWorkers: React.FC = () => {
       return;
     }
 
+    const phone = normalizeIndianMobile(newPhone);
+    if (!phone) {
+      alert(isAs ? 'অনুগ্ৰহ কৰি সঠিক ১০ অংকৰ মোবাইল নম্বৰ লিখক।' : 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    if (!consent) {
+      alert(isAs
+        ? 'নাম আৰু ফোন নম্বৰ প্ৰকাশ কৰাৰ বাবে সন্মতি প্ৰয়োজন।'
+        : 'Please agree to your name and phone number being shown publicly.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       const selectedTradeOption = tradeOptions.find(t => t.key === newTrade);
@@ -207,9 +239,9 @@ export const SkilledWorkers: React.FC = () => {
       const payload = {
         full_name: newName.trim(),
         skill_en: selectedTradeOption ? selectedTradeOption.label_en : newTrade,
-        skill_as: selectedTradeOption ? selectedTradeOption.label_as.split(' ')[0] : newTrade,
+        skill_as: selectedTradeOption ? tradeNameAs(selectedTradeOption) : newTrade,
         chuburi_ward: finalArea,
-        phone_number: newPhone.trim(),
+        phone_number: phone,
         is_verified: false
       };
 
@@ -224,6 +256,7 @@ export const SkilledWorkers: React.FC = () => {
       setNewName('');
       setCustomArea('');
       setNewPhone('');
+      setConsent(false);
       setSelectedAreaOption(PREDEFINED_AREAS[0].key);
       fetchWorkers();
     } catch (err: any) {
@@ -242,15 +275,37 @@ export const SkilledWorkers: React.FC = () => {
       return;
     }
 
-    const removalMsg = isAs
-      ? `🚨 *কাৰিকৰ তালিকাৰ পৰা নাম আঁতৰোৱাৰ অনুৰোধ*\n👤 নাম: ${removalWorkerName}\n📱 ফোন: ${removalPhone}\n📝 কাৰণ: ${removalReason || 'ব্যক্তিগত কাৰণ'}`
-      : `🚨 *Artisan Removal Request*\n👤 Name: ${removalWorkerName}\n📱 Phone: ${removalPhone}\n📝 Reason: ${removalReason || 'Personal preference'}`;
+    const phone = normalizeIndianMobile(removalPhone);
+    if (!phone) {
+      alert(isAs ? 'অনুগ্ৰহ কৰি সঠিক ১০ অংকৰ মোবাইল নম্বৰ লিখক।' : 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
 
-    window.open(`https://wa.me/919954000000?text=${encodeURIComponent(removalMsg)}`, '_blank');
-    setShowRemovalModal(false);
-    setRemovalWorkerName('');
-    setRemovalPhone('');
-    setRemovalReason('');
+    // Saved for the admin to review in the Admin page's Removals tab
+    try {
+      setSubmitting(true);
+      const { error } = await supabase.from('worker_removal_requests').insert([{
+        worker_name: removalWorkerName.trim(),
+        phone_number: phone,
+        reason: removalReason.trim() || null
+      }]);
+      if (error) throw error;
+
+      alert(isAs
+        ? 'আপোনাৰ অনুৰোধ জমা হৈছে। এডমিনে পৰীক্ষা কৰি নাম আঁতৰাব।'
+        : 'Your request has been submitted. An admin will review it and remove the listing.');
+      setShowRemovalModal(false);
+      setRemovalWorkerName('');
+      setRemovalPhone('');
+      setRemovalReason('');
+    } catch (err: any) {
+      console.error('Error submitting removal request:', err);
+      alert(isAs
+        ? 'অনুৰোধ জমা দিব পৰা নগ’ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।'
+        : `Could not submit the request: ${err.message || 'please try again'}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -359,6 +414,22 @@ export const SkilledWorkers: React.FC = () => {
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
           <p className="text-xs text-slate-400">{isAs ? 'কাৰিকৰসকলৰ তথ্য সংগ্ৰহ কৰা হৈছে...' : 'Loading artisan directory...'}</p>
         </div>
+      ) : loadError ? (
+        <div className="bg-slate-900/40 border border-red-900/60 rounded-3xl p-12 text-center flex flex-col items-center gap-3">
+          <AlertCircle className="w-7 h-7 text-red-400" />
+          <p className="text-xs text-slate-300">
+            {isAs
+              ? 'কাৰিকৰৰ তালিকা লোড কৰিব পৰা নগ’ল। ইণ্টাৰনেট সংযোগ পৰীক্ষা কৰি পুনৰ চেষ্টা কৰক।'
+              : 'Could not load the directory. Please check your connection and try again.'}
+          </p>
+          <button
+            onClick={fetchWorkers}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl transition"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            {isAs ? 'পুনৰ চেষ্টা কৰক' : 'Try Again'}
+          </button>
+        </div>
       ) : filteredWorkers.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-12 text-center space-y-2">
           <p className="text-sm font-semibold text-slate-300">
@@ -371,7 +442,7 @@ export const SkilledWorkers: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredWorkers.map((worker) => {
-            const skill = isAs ? (worker.skill_as || worker.skill_en) : (worker.skill_en || worker.skill_as);
+            const skill = displaySkill(worker);
             const area = worker.chuburi_ward;
             const phone = worker.phone_number;
 
@@ -422,11 +493,12 @@ export const SkilledWorkers: React.FC = () => {
                       <span>{isAs ? 'কল কৰক' : 'Call'}</span>
                     </a>
                     <a
-                      href={`https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                        isAs 
-                          ? `নমস্কাৰ ${worker.full_name}, প'ৰ্টেলৰ পৰা আপোনাৰ সেৱাৰ বিষয়ে যোগাযোগ কৰিছোঁ।` 
+                      href={whatsappLink(
+                        phone,
+                        isAs
+                          ? `নমস্কাৰ ${worker.full_name}, প'ৰ্টেলৰ পৰা আপোনাৰ সেৱাৰ বিষয়ে যোগাযোগ কৰিছোঁ।`
                           : `Hello ${worker.full_name}, contacting you regarding your service from the portal.`
-                      )}`}
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-white text-xs font-bold transition active:scale-95 shadow-sm"
@@ -549,6 +621,21 @@ export const SkilledWorkers: React.FC = () => {
                 />
               </div>
 
+              <label className="flex items-start gap-2.5 text-xs text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-amber-500 flex-shrink-0"
+                />
+                <span>
+                  {isAs
+                    ? 'মই সন্মতি দিওঁ যে মোৰ নাম, কাম, এলেকা আৰু ফোন নম্বৰ এই প’ৰ্টেলত ৰাজহুৱাভাৱে প্ৰদৰ্শন কৰা হ’ব। পিছত “নাম আঁতৰাওক”ৰ জৰিয়তে আঁতৰাব পাৰিম।'
+                    : 'I agree that my name, trade, area and phone number will be shown publicly on this portal. I can ask for removal later using "Request Removal".'}
+                </span>
+              </label>
+
               <div className="pt-2 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
@@ -644,9 +731,10 @@ export const SkilledWorkers: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition active:scale-95"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition active:scale-95 disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   <span>{isAs ? 'অনুৰোধ প্ৰেৰণ কৰক' : 'Send Request'}</span>
                 </button>
               </div>
