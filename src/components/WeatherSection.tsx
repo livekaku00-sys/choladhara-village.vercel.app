@@ -21,7 +21,9 @@ import {
   Waves,
   ShieldAlert,
   Thermometer,
-  Bug
+  Bug,
+  Moon,
+  CloudMoon
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -80,11 +82,24 @@ const getWeatherMeta = (code: number, isDay: number = 1) => {
           labelAs: 'ফৰকাল নিৰ্মল ৰাতি',
           subEn: 'Starlit sky with calm winds',
           subAs: 'শান্ত বতাহ আৰু নিৰ্মল আকাশ',
-          icon: Sun,
+          icon: Moon,
           color: 'text-indigo-300',
           glow: 'shadow-indigo-500/20 ring-indigo-400/30 bg-gradient-to-br from-indigo-950/40 to-transparent',
           badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/40'
         };
+  }
+
+  if ((code === 1 || code === 2) && !isDay) {
+    return {
+      labelEn: 'Partly Cloudy Night',
+      labelAs: 'আংশিক ডাৱৰীয়া ৰাতি',
+      subEn: 'Scattered clouds with calm night air',
+      subAs: 'ৰাতিৰ আকাশত পাতল ডাৱৰ',
+      icon: CloudMoon,
+      color: 'text-indigo-300',
+      glow: 'shadow-indigo-500/20 ring-indigo-400/30 bg-gradient-to-br from-indigo-950/40 to-transparent',
+      badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/40'
+    };
   }
 
   switch (code) {
@@ -137,10 +152,30 @@ const getWeatherMeta = (code: number, isDay: number = 1) => {
         badgeBg: 'bg-teal-500/20 text-teal-300 border-teal-400/30'
       };
     case 61:
-    case 63:
-    case 65:
     case 80:
+      return {
+        labelEn: 'Light Rain',
+        labelAs: 'পাতলীয়া বৰষুণ',
+        subEn: 'Light showers, cloudy sky',
+        subAs: 'ডাৱৰীয়া আকাশ আৰু পাতলীয়া বৰষুণ',
+        icon: CloudRain,
+        color: 'text-sky-300',
+        glow: 'shadow-sky-500/20 ring-sky-400/20 bg-gradient-to-br from-sky-950/30 to-transparent',
+        badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-400/30'
+      };
+    case 63:
     case 81:
+      return {
+        labelEn: 'Moderate Rain',
+        labelAs: 'মধ্যমীয়া বৰষুণ',
+        subEn: 'Steady rain with thick clouds',
+        subAs: 'ডাঠ ডাৱৰ আৰু একেৰাহে বৰষুণ',
+        icon: CloudRain,
+        color: 'text-blue-400',
+        glow: 'shadow-blue-500/20 ring-blue-400/20 bg-gradient-to-br from-blue-950/40 to-transparent',
+        badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+      };
+    case 65:
     case 82:
       return {
         labelEn: 'Monsoon Rain Showers',
@@ -233,6 +268,9 @@ const DAY_NAMES_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 // Auto-refresh every 15 minutes so the section never goes stale on a long-open tab
 const AUTO_REFRESH_MS = 15 * 60 * 1000;
 
+// Daily rainfall (mm) at which the waterlogging alert is shown
+const HEAVY_RAIN_MM = 35;
+
 export const WeatherSection: React.FC = () => {
   const { language } = useLanguage();
   const isAs = language === 'as';
@@ -266,13 +304,15 @@ export const WeatherSection: React.FC = () => {
           precipitation: data.current.precipitation,
           weatherCode: data.current.weather_code,
           isDay: data.current.is_day,
-          uvIndex: Math.round(data.current.uv_index || data.daily.uv_index_max[0] || 0),
+          // 0 is a real reading (night), so only fall back when the value is missing
+          uvIndex: Math.round(data.current.uv_index ?? data.daily.uv_index_max?.[0] ?? 0),
           sunriseTime: formatTime12h(data.daily.sunrise?.[0]),
           sunsetTime: formatTime12h(data.daily.sunset?.[0])
         });
 
         const dailyItems: DailyForecast[] = data.daily.time.slice(0, 7).map((timeStr: string, idx: number) => {
-          const d = new Date(timeStr);
+          // "YYYY-MM-DD" alone is parsed as UTC; add a time so it is read as a local date
+          const d = new Date(`${timeStr}T00:00`);
           const dayIdx = d.getDay();
           return {
             date: `${d.getDate()}/${d.getMonth() + 1}`,
@@ -352,9 +392,11 @@ export const WeatherSection: React.FC = () => {
     const stormyNow = [95, 96, 99].includes(current.weatherCode);
 
     const rainyDays = next3Days.filter(d => d.rainProb > 50);
-    const heavyRainDays = next3Days.filter(d => d.rainProb > 75);
+    // Heavy = enough rain to matter (IMD "rather heavy" starts at ~35 mm/day), not just a high chance of drizzle
+    const heavyRainDays = next3Days.filter(d => d.precipitationSum >= HEAVY_RAIN_MM);
     // Pick the single worst day to quote specific numbers from
     const peakRainDay = next3Days.reduce((max, d) => (d.rainProb > max.rainProb ? d : max), next3Days[0]);
+    const wettestDay = next3Days.reduce((max, d) => (d.precipitationSum > max.precipitationSum ? d : max), next3Days[0]);
 
     const isHot = current.uvIndex >= 7 || current.temp > 33;
     const isFoggy = [45, 48].includes(current.weatherCode);
@@ -393,8 +435,8 @@ export const WeatherSection: React.FC = () => {
         icon: Waves,
         titleEn: 'Heavy Rain & Waterlogging Risk',
         titleAs: 'অতি বৰষুণ আৰু পানী জমাৰ আশংকা',
-        textEn: `${peakRainDay.dayNameEn} shows a ${peakRainDay.rainProb}% chance of rain with an estimated ${peakRainDay.precipitationSum}mm rainfall. Low-lying areas may flood — keep documents safe, avoid crossing flooded roads, and monitor local water levels.`,
-        textAs: `${peakRainDay.dayNameAs}ত ${peakRainDay.rainProb}% বৰষুণৰ সম্ভাৱনা আৰু আনুমানিক ${peakRainDay.precipitationSum}মিমি বৰষুণ হ'ব পাৰে। নিম্ন অঞ্চলত পানী জমা হ'ব পাৰে — কাগজ-পত্ৰ সাৱধানে ৰাখক আৰু পানী জমা হোৱা পথেৰে যাতায়াত নকৰিব।`
+        textEn: `${wettestDay.dayNameEn} shows a ${wettestDay.rainProb}% chance of rain with an estimated ${wettestDay.precipitationSum}mm rainfall. Low-lying areas may flood — keep documents safe, avoid crossing flooded roads, and monitor local water levels.`,
+        textAs: `${wettestDay.dayNameAs}ত ${wettestDay.rainProb}% বৰষুণৰ সম্ভাৱনা আৰু আনুমানিক ${wettestDay.precipitationSum}মিমি বৰষুণ হ'ব পাৰে। নিম্ন অঞ্চলত পানী জমা হ'ব পাৰে — কাগজ-পত্ৰ সাৱধানে ৰাখক আৰু পানী জমা হোৱা পথেৰে যাতায়াত নকৰিব।`
       });
     } else if (rainyDays.length > 0) {
       advisories.push({
@@ -405,7 +447,7 @@ export const WeatherSection: React.FC = () => {
         titleEn: 'Agro-Solar Advisory',
         titleAs: 'কৃষি পৰামৰ্শ',
         textEn: `${peakRainDay.rainProb}% rain probability on ${peakRainDay.dayNameEn} (~${peakRainDay.precipitationSum}mm). Postpone open-yard grain sun-drying and fertilizer spraying until skies clear.`,
-        textAs: `${peakRainDay.dayNameAs}ত ${peakRainDay.rainProb}% বৰষুণৰ সম্ভাৱনা (~${peakRainDay.precipitationSum}মিমি)। আকাশ পৰিষ্কাৰ নোহোৱালৈকে শস্য চপোৱা আৰু ৰ'দত ধান শুকুওৱাৰ কাম স্থগিত ৰাখক।`
+        textAs: `${peakRainDay.dayNameAs}ত ${peakRainDay.rainProb}% বৰষুণৰ সম্ভাৱনা (~${peakRainDay.precipitationSum}মিমি)। আকাশ পৰিষ্কাৰ নোহোৱালৈকে মুকলি চোতালত ধান শুকুওৱা আৰু সাৰ ছটিওৱাৰ কাম স্থগিত ৰাখক।`
       });
     }
 
